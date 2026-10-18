@@ -1,0 +1,224 @@
+import { DialogModule } from 'primeng/dialog';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
+import { DatePickerModule } from 'primeng/datepicker';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MessageService } from 'primeng/api';
+import { CrearMovimiento, Movimiento, MovimientosService } from '../../../services/movimientos';
+
+const CATEGORIAS = [
+  'Sueldo', 'Otros ingresos', 'Casa', 'Prestamo', 'Internet', 'Ayuntamiento', 'Luz',
+  'Ahorro', 'Tabaco', 'Comida', 'Caprichos', 'Ocio', 'Imprevistos', 'Gasolina',
+  'Otros gastos', 'Subscripciones'
+];
+
+const TIPO = ['Ingreso', 'Gasto'];
+
+@Component({
+  selector: 'app-add-movimiento',
+  standalone: true,
+  imports: [
+    DialogModule,
+    DatePickerModule,
+    InputNumberModule,
+    InputTextModule,
+    SelectModule,
+    FormsModule,
+    ButtonModule,
+    CheckboxModule
+  ],
+  templateUrl: './add-movimiento.html',
+  styleUrl: './add-movimiento.scss',
+})
+export class AddMovimiento implements OnChanges {
+  /** Movimiento que se está editando. Si es `null` el modal crea uno nuevo. */
+  @Input() movimiento: Movimiento | null = null;
+  @Input() showModalAddMovement: boolean = false;
+
+  @Output() modalClosed = new EventEmitter<void>();
+  /** Emite el movimiento guardado (creado o actualizado) para que el padre refresque la lista. */
+  @Output() saved = new EventEmitter<Movimiento>();
+
+  /** Indica si el modal está en modo edición. */
+  get editing(): boolean {
+    return !!this.movimiento;
+  }
+
+  private readonly movimientosService = inject(MovimientosService);
+  private readonly messages = inject(MessageService);
+
+  submitted = false;
+  checked: boolean = false;
+  guardando = false;
+
+  readonly categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
+  readonly typeMovimiento = TIPO.map(value => ({ label: value, value }));
+
+  form: {
+    fecha: Date | null;
+    descripcion: string;
+    categoria: string;
+    ingreso: number | null;
+    gasto: number | null;
+    tipo: string;
+    esFijo: boolean;
+  } = this.emptyForm();
+
+  private emptyForm() {
+    return {
+      fecha: new Date(),
+      descripcion: '',
+      categoria: '',
+      ingreso: null as number | null,
+      gasto: null as number | null,
+      tipo: '',
+      esFijo: false,
+    };
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Rellena el formulario cuando cambia el movimiento a editar o se abre el modal.
+    if (changes['movimiento']) {
+      this.loadForm();
+    } else if (changes['showModalAddMovement'] && changes['showModalAddMovement'].currentValue) {
+      this.submitted = false;
+      this.loadForm();
+    }
+  }
+
+  /** Vuelca en el formulario los datos del movimiento a editar (o lo limpia si se crea). */
+  private loadForm(): void {
+    this.submitted = false;
+
+    const movimiento = this.movimiento;
+    if (!movimiento) {
+      this.form = this.emptyForm();
+      return;
+    }
+
+    // El backend guarda el tipo en minúsculas ('ingreso' | 'gasto').
+    const tipo = (movimiento.tipo || '').toLowerCase() === 'gasto' ? 'Gasto' : 'Ingreso';
+
+    this.form = {
+      fecha: movimiento.fecha ? new Date(movimiento.fecha) : new Date(),
+      descripcion: movimiento.descripcion ?? '',
+      categoria: movimiento.categoria ?? '',
+      ingreso: tipo === 'Ingreso' ? this.movimiento?.ingreso || null : null,
+      gasto: tipo === 'Gasto' ? this.movimiento?.gasto || null : null,
+      tipo,
+      esFijo: !!movimiento.esFijo,
+    };
+  }
+
+  saveMovement(): void {
+    this.submitted = true;
+
+    // Validación de campos obligatorios (igual que marca la plantilla).
+    if (!this.form.fecha || !this.form.descripcion.trim() || !this.form.categoria || !this.form.tipo) {
+      // this.messages.add({
+      //   severity: 'warn',
+      //   summary: 'Campos obligatorios',
+      //   detail: 'Rellena los campos obligatorios.'
+      // });
+      // return;
+      return
+    }
+
+    const ingreso = Number(this.form.ingreso || 0);
+    const gasto = Number(this.form.gasto || 0);
+
+    // if ( !this.form.categoria) {
+    //   this.messages.add({
+    //     severity: 'warn',
+    //     summary: 'Categoría incorrecta',
+    //     detail: 'Elige una categoría para poder guardar el movimiento.'
+    //   });
+    //   return;
+    // }
+
+    if ((ingreso > 0 && gasto > 0) || (ingreso <= 0 && gasto <= 0)) {
+      this.messages.add({
+        severity: 'warn',
+        summary: 'Importe incorrecto',
+        detail: 'Introduce un ingreso o un gasto, pero no ambos.'
+      });
+      return;
+    }
+
+    // Cuerpo que espera el backend (POST /api/movimientos).
+    const payload: CrearMovimiento = {
+      fecha: this.form.fecha.toISOString(),
+      descripcion: this.form.descripcion.trim(),
+      categoria: this.form.categoria,
+      ingreso,
+      gasto,
+      // El backend valida el enum en minúsculas: 'ingreso' | 'gasto'.
+      tipo: this.form.tipo.toLowerCase(),
+      esFijo: this.form.esFijo,
+    };
+
+    this.guardando = true;
+
+    // En modo edición se actualiza el movimiento existente; si no, se crea uno nuevo.
+    const peticion$ =
+      this.editing && this.movimiento
+        ? this.movimientosService.actualizarMovimiento(this.movimiento._id, payload)
+        : this.movimientosService.crearMovimiento(payload);
+
+    peticion$.subscribe({
+      next: (movimiento) => {
+        this.guardando = false;
+        this.messages.add({
+          severity: 'success',
+          summary: this.editing ? 'Actualizado' : 'Guardado',
+          detail: this.editing
+            ? 'El movimiento se ha actualizado correctamente.'
+            : 'El movimiento se ha guardado correctamente.'
+        });
+        this.saved.emit(movimiento);
+        this.closeModal();
+      },
+      error: (err) => {
+        this.guardando = false;
+        console.error('Error al guardar el movimiento:', err);
+        this.messages.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.mensaje ?? 'No se pudo guardar el movimiento.'
+        });
+      }
+    });
+  }
+
+  onTipoChange(): void {
+    if (this.form.tipo === 'Ingreso') {
+      this.form.gasto = null;
+    } else {
+      this.form.ingreso = null;
+    }
+  }
+
+  resetForm(): void {
+    this.form = this.emptyForm();
+  }
+
+  closeModal(): void {
+    this.showModalAddMovement = false;
+    this.modalClosed.emit();
+    this.resetForm();
+    this.submitted = false;
+    this.guardando = false;
+  }
+}

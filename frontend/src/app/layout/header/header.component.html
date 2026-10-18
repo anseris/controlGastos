@@ -1,0 +1,17 @@
+<header class="topbar">
+    <div class="brand-mark"><i class="pi pi-wallet"></i></div>
+    <div class="brand-copy">
+      <div class="eyebrow">FINANZAS PERSONALES</div>
+      <h1>Control de gastos</h1>
+      <p>Ingresos, gastos y presupuesto en un solo lugar.</p>
+    </div>
+    <div class="top-actions">
+      <label class="import-button p-button p-component p-button-outlined" for="excelFile"><i class="pi pi-file-import"></i><span>Importar Excel</span></label>
+      <input id="excelFile" class="visually-hidden" type="file" accept=".xlsx,.xls,.xlsm">
+      <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true" ></p-button>
+      <p-button label="Nuevo movimiento" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    </div>
+  </header>
+  @if (showModalAddMovement) {
+    <app-add-movimiento [showModalAddMovement]="showModalAddMovement"  (modalClosed)="returnCloseModal()"></app-add-movimiento>
+  }

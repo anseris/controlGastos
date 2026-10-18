@@ -1,0 +1,14 @@
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 26px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.error-state {
+  color: var(--red);
+}

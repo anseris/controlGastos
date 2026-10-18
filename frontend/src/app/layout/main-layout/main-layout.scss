@@ -1,0 +1,21 @@
+.app-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 950px) {
+  .app-body {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .app-content {
+    width: 100%;
+  }
+}

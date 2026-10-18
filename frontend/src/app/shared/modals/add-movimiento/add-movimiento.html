@@ -1,0 +1,171 @@
+<p-dialog
+[(visible)]="showModalAddMovement"
+  [modal]="true"
+  (onHide)="modalClosed.emit()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(580px, 94vw)' }"
+  [header]="editing ? 'Editar movimiento' : 'Nuevo movimiento'"
+  styleClass="movement-dialog"
+>
+  <form class="movement-form" (ngSubmit)="saveMovement()">
+    <div class="form-field">
+      <label for="movementDate">Fecha *</label
+      ><p-datepicker
+        inputId="movementDate"
+        [(ngModel)]="form.fecha"
+        name="date"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [showButtonBar]="true"
+        appendTo="body"
+        styleClass="full-width"
+        [invalid]="submitted && !form.fecha"
+      ></p-datepicker>
+      @if (submitted && !form.fecha) {
+        <small class="field-error" >Selecciona una fecha.</small>
+      }
+      
+    </div>
+    <div class="form-field">
+      <label for="movementDescription">Descripción *</label
+      ><input
+        id="movementDescription"
+        pInputText
+        name="description"
+        [(ngModel)]="form.descripcion"
+        placeholder="Ej. Compra semanal"
+        class="full-width"
+        required
+        maxlength="120"
+      />
+      @if (submitted && !form.descripcion.trim()) {
+        <small class="field-error">Introduce una descripción.</small>
+      }
+      
+    </div>
+    <div class="form-columns">
+        <div class="form-field">
+            <label for="movementCategory">Categoría *</label>
+      <p-select
+        inputId="movementCategory"
+        name="category"
+        [options]="categoryOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.categoria"
+        [filter]="true"
+        appendTo="body"
+        placeholder="Selecciona una categoría"
+        styleClass="full-width">
+        </p-select>
+        @if (submitted && !form.categoria) {
+        <small class="field-error">Elige una categoría.</small>
+      }
+        </div>
+         
+<div class="form-field">
+  <div class="mt-5">
+    <p-checkbox
+      [(ngModel)]="form.esFijo"
+      name="esFijo"
+      [binary]="true"
+      inputId="esFijo">
+    </p-checkbox>
+
+    <label for="esFijo">
+      Movimiento fijo
+    </label>
+  </div>
+</div>
+
+        
+
+        
+      
+    </div>
+    <div class="form-columns">
+      <div class="form-field">
+        <label for="movementTipo">Tipo de Movimiento *</label>
+        <p-select
+        inputId="movementTipo"
+        name="tipo"
+        [options]="typeMovimiento"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.tipo"
+        (onChange)="onTipoChange()"
+        [filter]="true"
+        appendTo="body"
+        placeholder="Selecciona un tipo"
+        styleClass="full-width">
+        </p-select>
+         @if (submitted && !form.tipo) {
+        <small class="field-error">Elige un tipo.</small>
+      }
+        
+      </div>
+      @if (form.tipo === 'Ingreso') {
+        <div class="form-field">
+          <label for="movementIncome">Ingresos (€)</label>
+          <p-inputnumber
+            inputId="movementIncome"
+            name="income"
+            [(ngModel)]="form.ingreso"
+            mode="currency"
+            currency="EUR"
+            locale="es-ES"
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="full-width"
+            placeholder="0,00"
+          ></p-inputnumber>
+           @if (submitted && form.tipo === 'Ingreso' && !form.ingreso) {
+        <small class="field-error">Introduce un ingreso.</small>
+      }
+
+        </div>
+      } @else if(form.tipo === 'Gasto') {
+        <div class="form-field">
+          <label for="movementExpense">Gastos (€)</label>
+          <p-inputnumber
+            inputId="movementExpense"
+            name="expense"
+            [(ngModel)]="form.gasto"
+            mode="currency"
+            currency="EUR"
+            locale="es-ES"
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            styleClass="full-width"
+            placeholder="0,00"
+          ></p-inputnumber>
+           @if (submitted && form.tipo === 'Gasto' && !form.gasto) {
+        <small class="field-error">Introduce un gassto.</small>
+      }
+        </div>
+      }
+    </div>
+    <div class="form-hint">
+      <i class="pi pi-info-circle"></i> Selecciona el tipo y introduce el importe correspondiente.
+    </div>
+    <div class="dialog-actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="closeModal()"
+      ></p-button
+      ><p-button
+        [label]="editing ? 'Guardar cambios' : 'Guardar movimiento'"
+        icon="pi pi-check"
+        type="submit"
+        [loading]="guardando"
+        [disabled]="guardando"
+      ></p-button>
+    </div>
+  </form>
+</p-dialog>

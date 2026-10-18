@@ -1,0 +1,103 @@
+<p-card styleClass="panel-card">
+  <ng-template pTemplate="title">
+    <div class="panel-heading">
+      <div>
+        <h2>Movimientos</h2>
+        <p>Consulta de tus apuntes cargados desde el backend.</p>
+      </div>
+      <span class="count-pill">{{ movimientos().length }} movimientos</span>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    @if (cargando()) {
+      <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando movimientos…</div>
+    } @else if (error()) {
+      <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+    } @else {
+      <p-table
+        [value]="movimientos()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [rowHover]="true"
+        styleClass="movement-table"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th class="number-col">Ingresos</th>
+            <th class="number-col">Gastos</th>
+            <th class="number-col">Balance</th>
+            <th class="actions-col">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-movimiento>
+          <tr>
+            <td class="date-cell">{{ movimiento.fecha | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <span class="description-cell">{{ movimiento.descripcion }}</span>
+            </td>
+            <td><p-tag [value]="movimiento.categoria" [rounded]="true"></p-tag></td>
+            <td class="number-col income-text">
+              {{ movimiento.ingreso ? (movimiento.ingreso | currency: 'EUR') : '—' }}
+            </td>
+            <td class="number-col expense-text">
+              {{ movimiento.gasto ? (movimiento.gasto | currency: 'EUR') : '—' }}
+            </td>
+            <td
+                  class="number-col balance-cell"
+                  [class.negative]="balanceAfter(movimiento) < 0"
+                >
+                  {{ (balanceAfter(movimiento) | currency: 'EUR') }}
+                </td>
+                <td class="actions-col">
+                  <div class="row-actions">
+                    <p-button
+                      icon="pi pi-pencil"
+                      [text]="true"
+                      [rounded]="true"
+                      severity="secondary"
+                      ariaLabel="Editar movimiento"
+                      (onClick)="edit(movimiento)"
+                    ></p-button
+                    ><p-button
+                      icon="pi pi-trash"
+                      [text]="true"
+                      [rounded]="true"
+                      severity="danger"
+                      ariaLabel="Eliminar movimiento"
+                      (onClick)="deleteMovement(movimiento)"
+                    ></p-button>
+                  </div>
+                </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="pi pi-inbox"></i>
+                <strong>No hay movimientos</strong>
+                <span>Añade un movimiento para verlo aquí.</span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </ng-template>
+</p-card>
+
+@if (showModal()) {
+  <app-add-movimiento
+    [movimiento]="movimientoEditando()"
+    [showModalAddMovement]="showModal()"
+    (saved)="onSaved()"
+    (modalClosed)="onModalClosed()"
+  ></app-add-movimiento>
+}
+
+<p-confirmDialog key="movimientos"></p-confirmDialog>
