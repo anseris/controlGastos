@@ -1,1 +1,26 @@
-<p>categorias works!</p>
+<p-tabs value="tab1">
+            <p-tablist>
+                <p-tab value="tab1" class="flex items-center gap-2!">
+                    <!-- <svg data-p-icon="code"></svg> -->
+                    Resumen por Categorias
+                </p-tab>
+                <p-tab value="tab2" class="flex items-center gap-2!">
+                    <!-- <svg data-p-icon="info-circle"></svg> -->
+                    Listado
+                </p-tab>
+               
+            </p-tablist>
+            <p-tabpanels>
+                <p-tabpanel value="tab1">
+                    <h2 class="text-lg font-bold">Code</h2>
+                    <p class="text-surface-500 mt-1">Browse the source files, review the latest commits, and clone the repository to get started.</p>
+                </p-tabpanel>
+                <p-tabpanel value="tab2">
+                    <app-listado-categorias></app-listado-categorias>
+                    
+                    <h2 class="text-lg font-bold">Issues</h2>
+                    <p class="text-surface-500 mt-1">Track open bugs, feature requests, and ongoing discussions reported by the community.</p>
+                </p-tabpanel>
+                
+            </p-tabpanels>
+        </p-tabs>

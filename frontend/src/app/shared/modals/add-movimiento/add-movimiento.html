@@ -1,5 +1,5 @@
 <p-dialog
-[(visible)]="showModalAddMovement"
+  [(visible)]="showModalAddMovement"
   [modal]="true"
   (onHide)="modalClosed.emit()"
   [draggable]="false"
@@ -8,7 +8,7 @@
   [header]="editing ? 'Editar movimiento' : 'Nuevo movimiento'"
   styleClass="movement-dialog"
 >
-  <form class="movement-form" (ngSubmit)="saveMovement()">
+  <form class="modal-form" (ngSubmit)="saveMovement()">
     <div class="form-field">
       <label for="movementDate">Fecha *</label
       ><p-datepicker
@@ -23,9 +23,8 @@
         [invalid]="submitted && !form.fecha"
       ></p-datepicker>
       @if (submitted && !form.fecha) {
-        <small class="field-error" >Selecciona una fecha.</small>
+        <small class="field-error">Selecciona una fecha.</small>
       }
-      
     </div>
     <div class="form-field">
       <label for="movementDescription">Descripción *</label
@@ -42,68 +41,57 @@
       @if (submitted && !form.descripcion.trim()) {
         <small class="field-error">Introduce una descripción.</small>
       }
-      
     </div>
     <div class="form-columns">
-        <div class="form-field">
-            <label for="movementCategory">Categoría *</label>
-      <p-select
-        inputId="movementCategory"
-        name="category"
-        [options]="categoryOptions"
-        optionLabel="label"
-        optionValue="value"
-        [(ngModel)]="form.categoria"
-        [filter]="true"
-        appendTo="body"
-        placeholder="Selecciona una categoría"
-        styleClass="full-width">
+      <div class="form-field">
+        <label for="movementCategory">Categoría *</label>
+        <p-select
+          inputId="movementCategory"
+          name="category"
+          [options]="categoryOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.categoria"
+          [filter]="true"
+          appendTo="body"
+          placeholder="Selecciona una categoría"
+          styleClass="full-width"
+        >
         </p-select>
         @if (submitted && !form.categoria) {
-        <small class="field-error">Elige una categoría.</small>
-      }
+          <small class="field-error">Elige una categoría.</small>
+        }
+      </div>
+
+      <div class="form-field">
+        <div class="mt-5">
+          <p-checkbox [(ngModel)]="form.esFijo" name="esFijo" [binary]="true" inputId="esFijo">
+          </p-checkbox>
+
+          <label for="esFijo"> Movimiento fijo </label>
         </div>
-         
-<div class="form-field">
-  <div class="mt-5">
-    <p-checkbox
-      [(ngModel)]="form.esFijo"
-      name="esFijo"
-      [binary]="true"
-      inputId="esFijo">
-    </p-checkbox>
-
-    <label for="esFijo">
-      Movimiento fijo
-    </label>
-  </div>
-</div>
-
-        
-
-        
-      
+      </div>
     </div>
     <div class="form-columns">
       <div class="form-field">
         <label for="movementTipo">Tipo de Movimiento *</label>
         <p-select
-        inputId="movementTipo"
-        name="tipo"
-        [options]="typeMovimiento"
-        optionLabel="label"
-        optionValue="value"
-        [(ngModel)]="form.tipo"
-        (onChange)="onTipoChange()"
-        [filter]="true"
-        appendTo="body"
-        placeholder="Selecciona un tipo"
-        styleClass="full-width">
+          inputId="movementTipo"
+          name="tipo"
+          [options]="typeMovimiento"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.tipo"
+          (onChange)="onTipoChange()"
+          [filter]="true"
+          appendTo="body"
+          placeholder="Selecciona un tipo"
+          styleClass="full-width"
+        >
         </p-select>
-         @if (submitted && !form.tipo) {
-        <small class="field-error">Elige un tipo.</small>
-      }
-        
+        @if (submitted && !form.tipo) {
+          <small class="field-error">Elige un tipo.</small>
+        }
       </div>
       @if (form.tipo === 'Ingreso') {
         <div class="form-field">
@@ -121,12 +109,11 @@
             styleClass="full-width"
             placeholder="0,00"
           ></p-inputnumber>
-           @if (submitted && form.tipo === 'Ingreso' && !form.ingreso) {
-        <small class="field-error">Introduce un ingreso.</small>
-      }
-
+          @if (submitted && form.tipo === 'Ingreso' && !form.ingreso) {
+            <small class="field-error">Introduce un ingreso.</small>
+          }
         </div>
-      } @else if(form.tipo === 'Gasto') {
+      } @else if (form.tipo === 'Gasto') {
         <div class="form-field">
           <label for="movementExpense">Gastos (€)</label>
           <p-inputnumber
@@ -142,9 +129,9 @@
             styleClass="full-width"
             placeholder="0,00"
           ></p-inputnumber>
-           @if (submitted && form.tipo === 'Gasto' && !form.gasto) {
-        <small class="field-error">Introduce un gassto.</small>
-      }
+          @if (submitted && form.tipo === 'Gasto' && !form.gasto) {
+            <small class="field-error">Introduce un gassto.</small>
+          }
         </div>
       }
     </div>

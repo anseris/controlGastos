@@ -1,0 +1,5 @@
+<p-button label="Añadir Categoría" icon="pi pi-plus" (onClick)="anadirCategoria()"></p-button>
+
+@if (showModalAddCategorias) {
+    <app-add-categorias [showModalAddCategorias]="showModalAddCategorias"  (modalClosed)="returnCloseModal()"></app-add-categorias>
+  }
