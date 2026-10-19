@@ -1,1 +1,40 @@
-<p>dashboard works!</p>
+ <section class="stats-grid">
+    <p-card styleClass="stat-card income-card">
+      <div class="stat-top">
+        <span>Ingresos del periodo</span
+        ><span class="stat-icon"><i class="pi pi-arrow-down-left"></i></span>
+      </div>
+      <div class="stat-value">{{ totalIngresos | currency: 'EUR' }}</div>
+      <div class="stat-foot">Ingresos registrados</div>
+    </p-card>
+    <p-card styleClass="stat-card expense-card">
+      <div class="stat-top">
+        <span>Gastos del periodo</span
+        ><span class="stat-icon"><i class="pi pi-arrow-up-right"></i></span>
+      </div>
+      <div class="stat-value">{{ totalGastos | currency: 'EUR' }}</div>
+      <div class="stat-foot">Gastos registrados</div>
+    </p-card>
+    <p-card styleClass="stat-card balance-card">
+      <div class="stat-top">
+        <span>Balance del periodo</span
+        ><span class="stat-icon"><i class="pi pi-chart-line"></i></span>
+      </div>
+      <div class="stat-value" [class.negative]="balanceTotal < 0">
+        {{ balanceTotal | currency: 'EUR' }}
+      </div>
+      <div class="stat-foot">Ingresos menos gastos visibles</div>
+    </p-card>
+    <!-- <p-card styleClass="stat-card annual-card">
+      <div class="stat-top">
+        <span>Balance anual</span
+        ><span class="stat-icon"><i class="pi pi-calendar"></i></span>
+      </div>
+      <div class="stat-value" [class.negative]="annualBalance < 0">
+        {{ formatMoney(annualBalance) }}
+      </div>
+      <div class="stat-foot">
+        Media mensual: {{ formatMoney(averageMonthlyBalance) }}
+      </div>
+    </p-card> -->
+  </section>
