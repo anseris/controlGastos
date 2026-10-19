@@ -12,6 +12,7 @@ export type TipoMovimiento = 'ingreso' | 'gasto';
 export interface Movimiento {
   _id: string;
   id?: number;
+  /** Fecha en formato string `aaaa-mm-dd`. */
   fecha: string;
   descripcion: string;
   categoria: string;
@@ -24,13 +25,14 @@ export interface Movimiento {
 /**
  * Cuerpo para crear un movimiento (POST).
  * El backend exige: categoria, ingreso, gasto y tipo.
- * `fecha` tiene valor por defecto (ahora) y `esFijo` por defecto `false`.
+ * `fecha` (formato `aaaa-mm-dd`) tiene valor por defecto (hoy) y `esFijo` por defecto `false`.
  */
 export interface CrearMovimiento {
   categoria: string;
   ingreso: number;
   gasto: number;
   tipo: TipoMovimiento | string;
+  /** Fecha en formato string `aaaa-mm-dd`. */
   fecha?: string;
   descripcion?: string;
   esFijo?: boolean;

@@ -98,6 +98,20 @@ export class AddMovimiento implements OnChanges {
     }
   }
 
+  /** Da formato `aaaa-mm-dd` a una fecha usando sus componentes locales (sin desplazar el día). */
+  private formatFecha(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /** Convierte una fecha `aaaa-mm-dd` en un `Date` local (evita el desfase de zona horaria). */
+  private parseFecha(fecha: string): Date {
+    const [year, month, day] = fecha.slice(0, 10).split('-').map(Number);
+    return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
+  }
+
   /** Vuelca en el formulario los datos del movimiento a editar (o lo limpia si se crea). */
   private loadForm(): void {
     this.submitted = false;
@@ -112,7 +126,7 @@ export class AddMovimiento implements OnChanges {
     const tipo = (movimiento.tipo || '').toLowerCase() === 'gasto' ? 'Gasto' : 'Ingreso';
 
     this.form = {
-      fecha: movimiento.fecha ? new Date(movimiento.fecha) : new Date(),
+      fecha: movimiento.fecha ? this.parseFecha(movimiento.fecha) : new Date(),
       descripcion: movimiento.descripcion ?? '',
       categoria: movimiento.categoria ?? '',
       ingreso: tipo === 'Ingreso' ? this.movimiento?.ingreso || null : null,
@@ -159,7 +173,8 @@ export class AddMovimiento implements OnChanges {
 
     // Cuerpo que espera el backend (POST /api/movimientos).
     const payload: CrearMovimiento = {
-      fecha: this.form.fecha.toISOString(),
+      // El backend guarda la fecha como string en formato `aaaa-mm-dd`.
+      fecha: this.formatFecha(this.form.fecha),
       descripcion: this.form.descripcion.trim(),
       categoria: this.form.categoria,
       ingreso,

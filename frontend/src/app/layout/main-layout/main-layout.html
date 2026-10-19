@@ -1,6 +1,6 @@
 <div class="app-shell">
   <app-header></app-header>
-  <app-period-month></app-period-month>
+  <app-period-month (getMovimientos)="getMovimientos($event)"></app-period-month>
 
   <div class="app-body">
     <app-sidebar></app-sidebar>

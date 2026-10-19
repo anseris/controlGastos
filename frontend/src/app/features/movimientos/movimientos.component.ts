@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Movimiento, MovimientosService } from '../../services/movimientos';
+import { MovimientosStore } from '../../services/movimientos-store';
 import { AddMovimiento } from '../../shared/modals/add-movimiento/add-movimiento';
 
 @Component({
@@ -26,38 +27,29 @@ import { AddMovimiento } from '../../shared/modals/add-movimiento/add-movimiento
   styleUrl: './movimientos.component.scss',
 })
 export class MovimientosComponent implements OnInit {
-  readonly movimientos = signal<Movimiento[]>([]);
-  readonly cargando = signal(true);
-  readonly error = signal('');
+  private readonly store = inject(MovimientosStore);
+  private readonly messages = inject(MessageService);
+  private readonly confirm = inject(ConfirmationService);
+
+  /**
+   * Movimientos del mes seleccionado en el filtro de periodo.
+   * Es un signal derivado del `MovimientosStore`, así que la tabla se
+   * actualiza sola al cambiar el mes en el select de `period-month`.
+   */
+  readonly movimientos = this.store.movimientosFiltrados;
+  readonly cargando = this.store.cargando;
+  readonly error = this.store.error;
 
   /** Controla la visibilidad del modal de alta/edición. */
   readonly showModal = signal(false);
   /** Movimiento que se está editando (null cuando se crea uno nuevo). */
   readonly movimientoEditando = signal<Movimiento | null>(null);
 
-  private readonly messages = inject(MessageService);
-  private readonly confirm = inject(ConfirmationService);
-
   constructor(private movimientosService: MovimientosService) {}
 
   ngOnInit(): void {
-    this.loadData();
-  }
-
-  private loadData(): void {
-    this.cargando.set(true);
-    this.error.set('');
-    this.movimientosService.obtenerMovimientos().subscribe({
-      next: (datos) => {
-        this.movimientos.set(datos);
-        this.cargando.set(false);
-      },
-      error: (err) => {
-        console.error('Error al cargar movimientos:', err);
-        this.error.set('No se han podido cargar los movimientos.');
-        this.cargando.set(false);
-      },
-    });
+    // Si el store aún no tiene datos (p. ej. acceso directo), los carga.
+    this.store.cargar().subscribe();
   }
 
   balanceAfter(movement: Movimiento): number {
@@ -90,7 +82,8 @@ export class MovimientosComponent implements OnInit {
   private eliminar(movimiento: Movimiento): void {
     this.movimientosService.eliminarMovimiento(movimiento._id).subscribe({
       next: () => {
-        this.movimientos.update((lista) => lista.filter((m) => m._id !== movimiento._id));
+        // Recarga desde el backend para reflejar el borrado en el store.
+        this.store.cargar(true).subscribe();
         this.messages.add({
           severity: 'success',
           summary: 'Eliminado',
@@ -110,7 +103,7 @@ export class MovimientosComponent implements OnInit {
 
   /** Se invoca cuando el modal guarda (alta o edición) para refrescar la lista. */
   onSaved(): void {
-    this.loadData();
+    this.store.cargar(true).subscribe();
   }
 
   /** Se invoca cuando el modal se cierra. */

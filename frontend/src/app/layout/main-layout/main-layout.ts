@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { Sidebar } from '../sidebar/sidebar';
 import { PeriodMonth } from '../period-month/period-month';
+import { Movimiento } from '../../services/movimientos';
 
 @Component({
   selector: 'app-main-layout',
@@ -10,4 +11,10 @@ import { PeriodMonth } from '../period-month/period-month';
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
 })
-export class MainLayout {}
+export class MainLayout {
+  getMovimientos(movimientos: Movimiento[]) {
+    let hola = movimientos
+    console.log('main-layout', hola)
+      
+    }
+}

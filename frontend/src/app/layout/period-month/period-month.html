@@ -1,9 +1,19 @@
 <section class="filter-row">
     <div>
       <label for="monthFilter">Periodo de análisis</label>
-      <p-select inputId="monthFilter" [options]="monthOptions" optionLabel="label" optionValue="value" [(ngModel)]="selectedMonth" placeholder="Selecciona un mes" [filter]="false" styleClass="month-select"></p-select>
+      <p-select
+        inputId="monthFilter"
+        [options]="monthOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="selectedMonth()"
+        (onChange)="onMesChange($event.value)"
+        placeholder="Selecciona un mes"
+        [filter]="false"
+        styleClass="month-select"
+      ></p-select>
     </div>
-    <div class="period-note"><i class="pi pi-calendar"></i><span>{{ selectedMonth === 'all' ? 'Todos los movimientos' : monthLabel(selectedMonth) }}</span></div>
+    <div class="period-note"><i class="pi pi-calendar"></i><span>{{ selectedMonth() === 'all' ? 'Todos los movimientos' : monthLabel(selectedMonth()) }}</span></div>
     <div class="filter-spacer"></div>
     <!-- <p-button label="Restaurar Excel de ejemplo" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="restoreExamples()"></p-button> -->
   </section>
