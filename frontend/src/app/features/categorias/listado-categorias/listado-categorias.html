@@ -1,5 +1,68 @@
-<p-button label="Añadir Categoría" icon="pi pi-plus" (onClick)="anadirCategoria()"></p-button>
+<div class="listado-header">
+  <p-button label="Añadir Categoría" icon="pi pi-plus" (onClick)="anadirCategoria()"></p-button>
+</div>
 
-@if (showModalAddCategorias) {
-    <app-add-categorias [showModalAddCategorias]="showModalAddCategorias"  (modalClosed)="returnCloseModal()"></app-add-categorias>
-  }
+@if (cargando()) {
+  <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando categorías…</div>
+} @else if (error()) {
+  <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+} @else if (categorias().length === 0) {
+  <div class="empty-state">
+    <i class="pi pi-inbox"></i>
+    <strong>No hay categorías</strong>
+    <span>Añade una categoría para verla aquí.</span>
+  </div>
+} @else {
+  <div class="categorias-grid">
+    @for (categoria of categorias(); track categoria._id) {
+      <article class="categoria-card">
+        <div class="card-actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            ariaLabel="Editar categoría"
+            (onClick)="editarCategoria(categoria)"
+          ></p-button>
+          <p-button
+            icon="pi pi-trash"
+            [text]="true"
+            [rounded]="true"
+            severity="danger"
+            ariaLabel="Eliminar categoría"
+            (onClick)="eliminarCategoria(categoria)"
+          ></p-button>
+        </div>
+
+        <span
+          class="categoria-icon"
+          [style.backgroundColor]="categoria.color || '#9ca3af'"
+        >
+          @if (categoria.icono && categoria.hasIcono) {
+            <i [class]="categoria.icono"></i>
+          } @else {
+            <i>{{categoria.primeraLetra}}</i>
+          }
+        </span>
+        <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>
+        <p-tag
+          [value]="categoria.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'"
+          [severity]="categoria.tipo === 'ingreso' ? 'success' : 'danger'"
+          [rounded]="true"
+        ></p-tag>
+      </article>
+    }
+  </div>
+}
+
+@if (showModalAddCategorias()) {
+  <app-add-categorias
+    [showModalAddCategorias]="showModalAddCategorias()"
+    [categoria]="categoriaEditando()"
+    (saved)="onSaved()"
+    (modalClosed)="returnCloseModal()"
+  ></app-add-categorias>
+}
+
+<p-confirmDialog key="categorias"></p-confirmDialog>

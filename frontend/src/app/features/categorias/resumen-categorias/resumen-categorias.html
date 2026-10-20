@@ -1,0 +1,155 @@
+@if (cargando()) {
+  <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando resumen…</div>
+} @else if (error()) {
+  <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+} @else if (categorias().length === 0) {
+  <div class="empty-state">
+    <i class="pi pi-inbox"></i>
+    <strong>No hay categorías</strong>
+    <span>Añade una categoría para ver el resumen.</span>
+  </div>
+} @else {
+  <!-- Ingresos -->
+  @if (ingresos().length > 0) {
+    <section class="grupo">
+      <header class="grupo-head">
+        <h3 class="grupo-title">
+          <i class="pi pi-arrow-down-left"></i> Ingresos
+        </h3>
+        <span class="grupo-total income-text">{{ totalIngresos() | currency: 'EUR' }}</span>
+      </header>
+      <div class="categorias-grid">
+        @for (item of ingresos(); track item.categoria._id) {
+          <article
+            class="cat-card"
+            [class.is-empty]="item.total === 0"
+            [class.is-active]="seleccionada() === item.categoria._id"
+            (click)="seleccionar(item.categoria)"
+          >
+            <div class="cat-head">
+              <span
+                class="cat-icon"
+                [style.backgroundColor]="item.categoria.color || '#9ca3af'"
+              >
+                @if (item.categoria.icono) {
+                  <i [class]="item.categoria.icono"></i>
+                } @else {
+                  <i>{{ item.categoria.nombre.charAt(0).toUpperCase() }}</i>
+                }
+              </span>
+              <span class="cat-count" title="Nº de movimientos">
+                {{ item.movimientos.length }}
+              </span>
+            </div>
+            <h4 class="cat-name">{{ item.categoria.nombre }}</h4>
+            <span class="cat-total income-text">{{ item.total | currency: 'EUR' }}</span>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Gastos -->
+  @if (gastos().length > 0) {
+    <section class="grupo">
+      <header class="grupo-head">
+        <h3 class="grupo-title">
+          <i class="pi pi-arrow-up-right"></i> Gastos
+        </h3>
+        <span class="grupo-total expense-text">{{ totalGastos() | currency: 'EUR' }}</span>
+      </header>
+      <div class="categorias-grid">
+        @for (item of gastos(); track item.categoria._id) {
+          <article
+            class="cat-card"
+            [class.is-empty]="item.total === 0"
+            [class.is-active]="seleccionada() === item.categoria._id"
+            (click)="seleccionar(item.categoria)"
+          >
+            <div class="cat-head">
+              <span
+                class="cat-icon"
+                [style.backgroundColor]="item.categoria.color || '#9ca3af'"
+              >
+                @if (item.categoria.icono) {
+                  <i [class]="item.categoria.icono"></i>
+                } @else {
+                  <i>{{ item.categoria.nombre.charAt(0).toUpperCase() }}</i>
+                }
+              </span>
+              <span class="cat-count" title="Nº de movimientos">
+                {{ item.movimientos.length }}
+              </span>
+            </div>
+            <h4 class="cat-name">{{ item.categoria.nombre }}</h4>
+            <span class="cat-total expense-text">{{ item.total | currency: 'EUR' }}</span>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Detalle de la categoría clicada -->
+  @if (detalle(); as det) {
+    <section class="detalle">
+      <div class="detalle-head">
+        <div class="detalle-title">
+          <span
+            class="cat-icon small"
+            [style.backgroundColor]="det.categoria.color || '#9ca3af'"
+          >
+            @if (det.categoria.icono) {
+              <i [class]="det.categoria.icono"></i>
+            } @else {
+              <i>{{ det.categoria.nombre.charAt(0).toUpperCase() }}</i>
+            }
+          </span>
+          <div>
+            <h3>Movimientos de «{{ det.categoria.nombre }}»</h3>
+            <small>{{ det.movimientos.length }} movimiento(s)</small>
+          </div>
+        </div>
+        <p-button
+          icon="pi pi-times"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          ariaLabel="Cerrar detalle"
+          (onClick)="cerrarDetalle()"
+        ></p-button>
+      </div>
+
+      <p-table [value]="det.movimientos" [rowHover]="true" styleClass="detalle-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="fecha-col">Fecha</th>
+            <th>Descripción</th>
+            <th class="importe-col">Importe</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-mov>
+          <tr>
+            <td class="fecha-col">{{ mov.fecha | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ mov.descripcion || '—' }}</td>
+            <td
+              class="importe-col"
+              [class.income-text]="mov.tipo === 'ingreso'"
+              [class.expense-text]="mov.tipo !== 'ingreso'"
+            >
+              {{ (mov.tipo === 'ingreso' ? mov.ingreso : mov.gasto) | currency: 'EUR' }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3">
+              <div class="detalle-empty">
+                Esta categoría no tiene movimientos en el periodo seleccionado.
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+}

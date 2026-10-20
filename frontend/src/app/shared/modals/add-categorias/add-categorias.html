@@ -1,150 +1,142 @@
 <p-dialog
-[(visible)]="showModalAddCategorias"
+  [(visible)]="showModalAddCategorias"
   [modal]="true"
   (onHide)="modalClosed.emit()"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: 'min(580px, 94vw)' }"
-  [header]="editing ? 'Editar Categoría' : 'Nueva Categoría'"
+  [style]="{ width: 'min(560px, 94vw)' }"
+  [header]="editing ? 'Editar categoría' : 'Nueva categoría'"
   styleClass="movement-dialog"
 >
-  <form class="modal-form" (ngSubmit)="saveCategoria()">
-   
+  <form class="movement-form" (ngSubmit)="saveCategoria()">
+    <!-- Nombre -->
     <div class="form-field">
-      <label for="categoriaDescription">Nombre de la categoría *</label
-      ><input
-        id="categoriaDescription"
+      <label for="categoriaNombre">Nombre de la categoría *</label>
+      <input
+        id="categoriaNombre"
         pInputText
-        name="description"
+        name="nombre"
         [(ngModel)]="formCategoria.nombre"
-        placeholder="Ej. Compra semanal"
+        placeholder="Ej. Comida"
         class="full-width"
         required
-        maxlength="120"
+        maxlength="60"
+        autocomplete="off"
       />
       @if (submitted && !formCategoria.nombre.trim()) {
-        <small class="field-error">Introduce un nombre de categoría.</small>
+        <small class="field-error">Introduce un nombre para la categoría.</small>
       }
-      
     </div>
-  
 
     <div class="form-columns">
- <div class="form-field">
-  <label for="iconoCategory">Icono *</label>
-
-<p-select
-  inputId="iconoCategory"
-  name="icono"
-  [options]="iconosOptions"
-  optionLabel="label"
-  optionValue="value"
-  [(ngModel)]="formCategoria.icono"
-  [filter]="true"
-  appendTo="body"
-  [panelStyle]="{ width: 'auto', 'min-width': '0' }"
-  placeholder="Selecciona un icono"
-  styleClass="full-width">
-
-  <ng-template #item let-option>
-    <div class="icon-option">
-      <i [class]="option.value"></i>
-    </div>
-  </ng-template>
-
-  <ng-template #selectedItem let-option>
-    @if (option) {
-      <i [class]="option.value"></i>
-    }
-  </ng-template>
-
-</p-select>
-
-
-
-  @if (submitted && !formCategoria.icono) {
-    <small class="field-error">Elige un icono.</small>
-  }
-</div>  
-
-
-        <div class="form-field">
-  <label for="colorCategory">Color *</label>
-
-  <p-select
-    inputId="colorCategory"
-    name="color"
-    [options]="coloresOptions"
-    optionLabel="label"
-    optionValue="value"
-    [(ngModel)]="formCategoria.color"
-    [filter]="true"
-    appendTo="body"
-    placeholder="Selecciona un color"
-    styleClass="full-width">
-
-    <ng-template #item let-option>
-      <div class="select-option">
-        <span
-          class="color-circle"
-          [style.backgroundColor]="option.value">
-        </span>
-        <span>{{ option.label }}</span>
+      <!-- Tipo -->
+      <div class="form-field">
+        <label for="categoriaTipo">Tipo *</label>
+        <p-select
+          inputId="categoriaTipo"
+          name="tipo"
+          [options]="tipoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="formCategoria.tipo"
+          appendTo="body"
+          styleClass="full-width"
+        ></p-select>
       </div>
-    </ng-template>
 
-    <ng-template #selectedItem let-option>
-      @if (option) {
-        <div class="select-option">
-          <span
-            class="color-circle"
-            [style.backgroundColor]="option.value">
-          </span>
-          <span>{{ option.label }}</span>
-        </div>
-      }
-    </ng-template>
-
-  </p-select>
-
-  @if (submitted && !formCategoria.color) {
-    <small class="field-error">Elige un color.</small>
-  }
-</div>
-
-
-        
-
-        
-      
+      <!-- Color -->
+      <div class="form-field">
+        <label for="categoriaColor">Color *</label>
+        <p-select
+          inputId="categoriaColor"
+          name="color"
+          [options]="coloresOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="formCategoria.color"
+          [filter]="true"
+          filterPlaceholder="Buscar color"
+          appendTo="body"
+          placeholder="Selecciona un color"
+          styleClass="full-width"
+        >
+          <ng-template #item let-color>
+            <div class="select-option">
+              <span class="color-circle" [style.backgroundColor]="color.value"></span>
+              <span>{{ color.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template #selectedItem let-color>
+            @if (color) {
+              <div class="select-option">
+                <span class="color-circle" [style.backgroundColor]="color.value"></span>
+                <span>{{ color.label }}</span>
+              </div>
+            }
+          </ng-template>
+        </p-select>
+        @if (submitted && !formCategoria.color) {
+          <small class="field-error">Elige un color.</small>
+        }
+      </div>
     </div>
 
-
-   
-
-  
-
-    <div class="form-hint">
-      <i class="pi pi-info-circle"></i> Selecciona el tipo y introduce el importe correspondiente.
+    <!-- Icono -->
+    <div class="form-field">
+      <label>Icono</label>
+      <div class="icon-picker">
+        @for (icono of iconosOptions; track icono.value) {
+          <button
+            type="button"
+            class="icon-cell"
+            [class.selected]="formCategoria.icono === icono.value"
+            (click)="formCategoria.icono = icono.value"
+            [attr.aria-label]="icono.label"
+          >
+            @if (icono.value) {
+              <i [class]="icono.value"></i>
+            } @else {
+              <i class="pi pi-ban icon-none"></i>
+            }
+          </button>
+        }
+      </div>
+      <small class="field-hint">Pulsa un icono para seleccionarlo (opcional).</small>
     </div>
 
+    <!-- Vista previa -->
+    <div class="categoria-preview">
+      <span
+        class="preview-badge"
+        [style.backgroundColor]="formCategoria.color || '#e5e7eb'"
+      >
+        @if (formCategoria.icono) {
+          <i [class]="formCategoria.icono"></i>
+        } @else {
+          <i class="pi pi-ban"></i>
+        }
+      </span>
+      <div class="preview-text">
+        <strong>{{ formCategoria.nombre.trim() || 'Nueva categoría' }}</strong>
+        <small>{{ formCategoria.tipo === 'ingreso' ? 'Ingreso' : 'Gasto' }}</small>
+      </div>
+    </div>
 
-    <!-- <div class="dialog-actions">
+    <div class="dialog-actions">
       <p-button
         label="Cancelar"
         severity="secondary"
         [outlined]="true"
         type="button"
         (onClick)="closeModal()"
-      ></p-button
-      ><p-button
-        [label]="editing ? 'Guardar cambios' : 'Guardar movimiento'"
+      ></p-button>
+      <p-button
+        [label]="editing ? 'Guardar cambios' : 'Guardar categoría'"
         icon="pi pi-check"
         type="submit"
         [loading]="guardando"
         [disabled]="guardando"
       ></p-button>
-    </div> -->
+    </div>
   </form>
 </p-dialog>
-

@@ -1,0 +1,92 @@
+.listado-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 26px;
+  font-size: 13px;
+  color: var(--muted, #788398);
+}
+
+.error-state {
+  color: var(--red, #c34b5a);
+}
+
+.categorias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.categoria-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px 16px;
+  background: #fff;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 14px;
+  box-shadow: 0 3px 14px rgba(29, 41, 57, 0.03);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.categoria-card:hover {
+  border-color: #d3d9e6;
+  box-shadow: 0 6px 18px rgba(29, 41, 57, 0.08);
+}
+
+.card-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+}
+
+.categoria-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.15rem;
+}
+
+.categoria-nombre {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #26334b;
+  word-break: break-word;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 26px;
+  color: var(--muted, #788398);
+  font-size: 12px;
+}
+
+.empty-state strong {
+  color: #26334b;
+  font-size: 13px;
+}
+
+.empty-state i {
+  font-size: 22px;
+  color: #b6bdcb;
+}

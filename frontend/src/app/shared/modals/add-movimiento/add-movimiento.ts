@@ -17,12 +17,13 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { CrearMovimiento, Movimiento, MovimientosService } from '../../../services/movimientos';
+import { CategoriasService } from '../../../services/categorias';
 
-const CATEGORIAS = [
-  'Sueldo', 'Otros ingresos', 'Casa', 'Prestamo', 'Internet', 'Ayuntamiento', 'Luz',
-  'Ahorro', 'Tabaco', 'Comida', 'Caprichos', 'Ocio', 'Imprevistos', 'Gasolina',
-  'Otros gastos', 'Subscripciones'
-];
+// const CATEGORIAS = [
+//   'Sueldo', 'Otros ingresos', 'Casa', 'Prestamo', 'Internet', 'Ayuntamiento', 'Luz',
+//   'Ahorro', 'Tabaco', 'Comida', 'Caprichos', 'Ocio', 'Imprevistos', 'Gasolina',
+//   'Otros gastos', 'Subscripciones'
+// ];
 
 const TIPO = ['Ingreso', 'Gasto'];
 
@@ -57,13 +58,16 @@ export class AddMovimiento implements OnChanges {
   }
 
   private readonly movimientosService = inject(MovimientosService);
+ private readonly categoriasService = inject(CategoriasService);
   private readonly messages = inject(MessageService);
 
   submitted = false;
   checked: boolean = false;
   guardando = false;
+  tieneRedondeo = true
+  categoryOptions: any = []
 
-  readonly categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
+  // readonly categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
   readonly typeMovimiento = TIPO.map(value => ({ label: value, value }));
 
   form: {
@@ -92,9 +96,11 @@ export class AddMovimiento implements OnChanges {
     // Rellena el formulario cuando cambia el movimiento a editar o se abre el modal.
     if (changes['movimiento']) {
       this.loadForm();
+      this.loadCategorias()
     } else if (changes['showModalAddMovement'] && changes['showModalAddMovement'].currentValue) {
       this.submitted = false;
       this.loadForm();
+       this.loadCategorias()
     }
   }
 
@@ -136,31 +142,32 @@ export class AddMovimiento implements OnChanges {
     };
   }
 
+  private loadCategorias(): void {
+    // this.cargando.set(true);
+    // this.error.set('');
+    this.categoriasService.obtenerCategorias().subscribe({
+      next: (datos) => {
+        let CATEGORIAS = datos.map(datos => datos.nombre);
+        this.categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
+      },
+      error: (err) => {
+        console.error('Error al cargar categorías:', err);
+        // this.error.set('No se han podido cargar las categorías.');
+        // this.cargando.set(false);
+      },
+    });
+  }
+
   saveMovement(): void {
     this.submitted = true;
 
     // Validación de campos obligatorios (igual que marca la plantilla).
     if (!this.form.fecha || !this.form.descripcion.trim() || !this.form.categoria || !this.form.tipo) {
-      // this.messages.add({
-      //   severity: 'warn',
-      //   summary: 'Campos obligatorios',
-      //   detail: 'Rellena los campos obligatorios.'
-      // });
-      // return;
       return
     }
 
     const ingreso = Number(this.form.ingreso || 0);
     const gasto = Number(this.form.gasto || 0);
-
-    // if ( !this.form.categoria) {
-    //   this.messages.add({
-    //     severity: 'warn',
-    //     summary: 'Categoría incorrecta',
-    //     detail: 'Elige una categoría para poder guardar el movimiento.'
-    //   });
-    //   return;
-    // }
 
     if ((ingreso > 0 && gasto > 0) || (ingreso <= 0 && gasto <= 0)) {
       this.messages.add({
@@ -184,6 +191,8 @@ export class AddMovimiento implements OnChanges {
       esFijo: this.form.esFijo,
     };
 
+
+    
     this.guardando = true;
 
     // En modo edición se actualiza el movimiento existente; si no, se crea uno nuevo.
@@ -202,6 +211,9 @@ export class AddMovimiento implements OnChanges {
             ? 'El movimiento se ha actualizado correctamente.'
             : 'El movimiento se ha guardado correctamente.'
         });
+        if(this.tieneRedondeo){
+          this.addRedondeo(this.form)
+        }
         this.saved.emit(movimiento);
         this.closeModal();
       },
@@ -236,4 +248,78 @@ export class AddMovimiento implements OnChanges {
     this.submitted = false;
     this.guardando = false;
   }
+
+  addRedondeo(form: any): void {
+    this.submitted = true;
+
+    // Validación de campos obligatorios (igual que marca la plantilla).
+    
+    const valor = Number(form.gasto || 0);
+
+    const unidadSuperior = Math.ceil(valor); // 6
+    const diferencia = Math.round((unidadSuperior - valor) * 100) / 100;
+    const gasto = diferencia;
+    const ingreso = Number(form.ingreso || 0);
+
+    // if ((ingreso > 0 && gasto > 0) || (ingreso <= 0 && gasto <= 0)) {
+    //   this.messages.add({
+    //     severity: 'warn',
+    //     summary: 'Importe incorrecto',
+    //     detail: 'Introduce un ingreso o un gasto, pero no ambos.'
+    //   });
+    //   return;
+    // }
+
+    // Cuerpo que espera el backend (POST /api/movimientos).
+    const payload: CrearMovimiento = {
+      // El backend guarda la fecha como string en formato `aaaa-mm-dd`.
+      fecha: this.formatFecha(form.fecha),
+      descripcion: 'Redondeo',
+      categoria: 'Ahorro',
+      ingreso,
+      gasto,
+      // El backend valida el enum en minúsculas: 'ingreso' | 'gasto'.
+      tipo: 'gasto',
+      esFijo: false,
+    };
+
+    
+
+
+ 
+
+    this.guardando = true;
+
+    // En modo edición se actualiza el movimiento existente; si no, se crea uno nuevo.
+    const peticion$ =
+      this.editing && this.movimiento
+        ? this.movimientosService.actualizarMovimiento(this.movimiento._id, payload)
+        : this.movimientosService.crearMovimiento(payload);
+
+    peticion$.subscribe({
+      next: (movimiento) => {
+        this.guardando = false;
+        this.messages.add({
+          severity: 'success',
+          summary: this.editing ? 'Actualizado' : 'Guardado',
+          detail: this.editing
+            ? 'El movimiento se ha actualizado correctamente.'
+            : 'El movimiento se ha guardado correctamente.'
+        });
+        
+        this.saved.emit(movimiento);
+        this.closeModal();
+      },
+      error: (err) => {
+        this.guardando = false;
+        console.error('Error al guardar el movimiento:', err);
+        this.messages.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.mensaje ?? 'No se pudo guardar el movimiento.'
+        });
+      }
+    });
+  }
+
 }

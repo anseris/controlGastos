@@ -1,25 +1,28 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { MovimientosService } from '../../../services/movimientos';
-import { MessageService } from 'primeng/api';
-import { DialogModule } from 'primeng/dialog';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
+import {
+  Categoria,
+  CategoriasService,
+  CrearCategoria,
+  TipoCategoria,
+} from '../../../services/categorias';
 
-@Component({
-  selector: 'app-add-categorias',
-  imports: [DialogModule, FormsModule, InputTextModule, SelectModule],
-  templateUrl: './add-categorias.html',
-  styleUrl: './add-categorias.scss',
-})
-export class AddCategorias {
-   /** Movimiento que se está editando. Si es `null` el modal crea uno nuevo. */
-  @Input() showModalAddCategorias: boolean = false;
-  @Input() categoria: any | null = null;
-
-  @Output() modalClosed = new EventEmitter<void>();
-
-  readonly iconosOptions = [
+/** Opciones de icono. La cadena vacía representa "Sin icono". */
+const ICONOS: { label: string; value: string }[] = [
+  { label: 'Sin icono', value: '' },
   { label: 'Casa', value: 'pi pi-home' },
   { label: 'Sueldo', value: 'pi pi-briefcase' },
   { label: 'Dinero', value: 'pi pi-wallet' },
@@ -39,10 +42,11 @@ export class AddCategorias {
   { label: 'Viajes', value: 'pi pi-globe' },
   { label: 'Compras', value: 'pi pi-shopping-bag' },
   { label: 'Educación', value: 'pi pi-book' },
-  { label: 'Transporte', value: 'pi pi-truck' }
+  { label: 'Transporte', value: 'pi pi-truck' },
 ];
 
-readonly coloresOptions = [
+/** Colores disponibles para la categoría. */
+const COLORES: { label: string; value: string }[] = [
   { label: 'Rojo', value: '#EF4444' },
   { label: 'Naranja', value: '#F97316' },
   { label: 'Amarillo', value: '#EAB308' },
@@ -53,139 +57,147 @@ readonly coloresOptions = [
   { label: 'Rosa', value: '#EC4899' },
   { label: 'Marrón', value: '#A16207' },
   { label: 'Gris', value: '#6B7280' },
-  { label: 'Negro', value: '#1F2937' }
+  { label: 'Negro', value: '#1F2937' },
 ];
 
-  //TODO
-  /** Emite el movimiento guardado (creado o actualizado) para que el padre refresque la lista. */
-  // @Output() saved = new EventEmitter<Movimiento>();
+/** Tipos de categoría. El orden pone "Gasto" primero y es el valor por defecto. */
+const TIPOS: { label: string; value: TipoCategoria }[] = [
+  { label: 'Gasto', value: 'gasto' },
+  { label: 'Ingreso', value: 'ingreso' },
+];
 
-  //TODO
+@Component({
+  selector: 'app-add-categorias',
+  imports: [DialogModule, FormsModule, InputTextModule, SelectModule, ButtonModule],
+  templateUrl: './add-categorias.html',
+  styleUrl: './add-categorias.scss',
+})
+export class AddCategorias implements OnChanges {
+  /** Controla la visibilidad del diálogo. */
+  @Input() showModalAddCategorias = false;
+  /** Categoría que se está editando. Si es `null` el modal crea una nueva. */
+  @Input() categoria: Categoria | null = null;
+
+  @Output() modalClosed = new EventEmitter<void>();
+  /** Emite la categoría guardada (creada o actualizada) para refrescar la lista. */
+  @Output() saved = new EventEmitter<Categoria>();
+
+  private readonly categoriasService = inject(CategoriasService);
+  private readonly messages = inject(MessageService);
+
+  readonly iconosOptions = ICONOS;
+  readonly coloresOptions = COLORES;
+  readonly tipoOptions = TIPOS;
+
+  submitted = false;
+  guardando = false;
+
+  formCategoria: {
+    nombre: string;
+    tipo: TipoCategoria;
+    icono: string;
+    color: string;
+    hasIcono: boolean;
+    primeraLetra: string;
+  } = this.emptyForm();
+
   /** Indica si el modal está en modo edición. */
   get editing(): boolean {
     return !!this.categoria;
   }
 
-
-  //TODO
-  // private readonly movimientosService = inject(MovimientosService);
-  private readonly messages = inject(MessageService);
-
-  submitted = false;
-  checked: boolean = false;
-  guardando = false;
-
-
-  //TODO
-  // readonly categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
-  // readonly typeMovimiento = TIPO.map(value => ({ label: value, value }));
-
-  formCategoria: {
-    nombre: string;
-    icono: string;
-    color: string;
-  } = this.emptyForm();
-
   private emptyForm() {
     return {
       nombre: '',
+      // Por defecto la categoría se crea como gasto.
+      tipo: 'gasto' as TipoCategoria,
+      // Cadena vacía = sin icono.
       icono: '',
       color: '',
+      hasIcono: false,
+      primeraLetra: ''
     };
   }
-  //TODO
-  // ngOnChanges(changes: SimpleChanges): void {
-  //   // Rellena el formulario cuando cambia el movimiento a editar o se abre el modal.
-  //   if (changes['movimiento']) {
-  //     this.loadForm();
-  //   } else if (changes['showModalAddMovement'] && changes['showModalAddMovement'].currentValue) {
-  //     this.submitted = false;
-  //     this.loadForm();
-  //   }
-  // }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    // Rellena el formulario al cambiar la categoría a editar o al abrirse el modal.
+    if (changes['categoria']) {
+      this.loadForm();
+    } else if (changes['showModalAddCategorias']?.currentValue) {
+      this.loadForm();
+    }
+  }
 
- 
-  //TODO
-  /** Vuelca en el formulario los datos del movimiento a editar (o lo limpia si se crea). */
-  // private loadForm(): void {
-  //   this.submitted = false;
+  /** Vuelca en el formulario la categoría a editar (o lo limpia si se crea). */
+  private loadForm(): void {
+    this.submitted = false;
 
-  //   const movimiento = this.movimiento;
-  //   if (!movimiento) {
-  //     this.form = this.emptyForm();
-  //     return;
-  //   }
+    const categoria = this.categoria;
+    if (!categoria) {
+      this.formCategoria = this.emptyForm();
+      return;
+    }
 
-  //   // El backend guarda el tipo en minúsculas ('ingreso' | 'gasto').
-  //   const tipo = (movimiento.tipo || '').toLowerCase() === 'gasto' ? 'Gasto' : 'Ingreso';
-
-  //   this.form = {
-  //     fecha: movimiento.fecha ? this.parseFecha(movimiento.fecha) : new Date(),
-  //     descripcion: movimiento.descripcion ?? '',
-  //     categoria: movimiento.categoria ?? '',
-  //     ingreso: tipo === 'Ingreso' ? this.movimiento?.ingreso || null : null,
-  //     gasto: tipo === 'Gasto' ? this.movimiento?.gasto || null : null,
-  //     tipo,
-  //     esFijo: !!movimiento.esFijo,
-  //   };
-  // }
+    this.formCategoria = {
+      nombre: categoria.nombre ?? '',
+      tipo: (categoria.tipo ?? 'gasto') as TipoCategoria,
+      icono: categoria.icono ?? '',
+      color: categoria.color ?? '',
+      hasIcono: false,
+      primeraLetra: categoria.nombre.charAt(0).toUpperCase()
+    };
+  }
 
   saveCategoria(): void {
     this.submitted = true;
 
-    // Validación de campos obligatorios (igual que marca la plantilla).
-    if (!this.formCategoria.nombre.trim() || !this.formCategoria.icono.trim() || !this.formCategoria.color.trim()) {
-      return
+    // El nombre es el único campo obligatorio.
+    if (!this.formCategoria.nombre.trim()) {
+      return;
     }
-    
-    //TODO
-    // Cuerpo que espera el backend (POST /api/movimientos).
-    // const payload: CrearMovimiento = {
-    //   // El backend guarda la fecha como string en formato `aaaa-mm-dd`.
-    //   fecha: this.formatFecha(this.form.fecha),
-    //   descripcion: this.form.descripcion.trim(),
-    //   categoria: this.form.categoria,
-    //   ingreso,
-    //   gasto,
-    //   // El backend valida el enum en minúsculas: 'ingreso' | 'gasto'.
-    //   tipo: this.form.tipo.toLowerCase(),
-    //   esFijo: this.form.esFijo,
-    // };
 
-    // this.guardando = true;
+    // Cuerpo que espera el backend (POST/PUT /api/categorias).
+    const payload: CrearCategoria = {
+      nombre: this.formCategoria.nombre.trim(),
+      tipo: this.formCategoria.tipo,
+      icono: this.formCategoria.icono,
+      color: this.formCategoria.color,
+      hasIcono: this.formCategoria.icono !== '' ? true : false,
+      primeraLetra:  this.formCategoria.nombre.charAt(0).toUpperCase()
+    };
 
-    // // En modo edición se actualiza el movimiento existente; si no, se crea uno nuevo.
-    // const peticion$ =
-    //   this.editing && this.movimiento
-    //     ? this.movimientosService.actualizarMovimiento(this.movimiento._id, payload)
-    //     : this.movimientosService.crearMovimiento(payload);
+    this.guardando = true;
 
-    // peticion$.subscribe({
-    //   next: (movimiento) => {
-    //     this.guardando = false;
-    //     this.messages.add({
-    //       severity: 'success',
-    //       summary: this.editing ? 'Actualizado' : 'Guardado',
-    //       detail: this.editing
-    //         ? 'El movimiento se ha actualizado correctamente.'
-    //         : 'El movimiento se ha guardado correctamente.'
-    //     });
-    //     this.saved.emit(movimiento);
-    //     this.closeModal();
-    //   },
-    //   error: (err) => {
-    //     this.guardando = false;
-    //     console.error('Error al guardar el movimiento:', err);
-    //     this.messages.add({
-    //       severity: 'error',
-    //       summary: 'Error',
-    //       detail: err?.error?.mensaje ?? 'No se pudo guardar el movimiento.'
-    //     });
-    //   }
-    // });
+    // En modo edición se actualiza la categoría existente; si no, se crea una nueva.
+    const peticion$ =
+      this.editing && this.categoria
+        ? this.categoriasService.actualizarCategoria(this.categoria._id, payload)
+        : this.categoriasService.crearCategoria(payload);
+
+    peticion$.subscribe({
+      next: (categoria) => {
+        this.guardando = false;
+        this.messages.add({
+          severity: 'success',
+          summary: this.editing ? 'Actualizada' : 'Guardada',
+          detail: this.editing
+            ? 'La categoría se ha actualizado correctamente.'
+            : 'La categoría se ha guardado correctamente.',
+        });
+        this.saved.emit(categoria);
+        this.closeModal();
+      },
+      error: (err) => {
+        this.guardando = false;
+        console.error('Error al guardar la categoría:', err);
+        this.messages.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.mensaje ?? 'No se pudo guardar la categoría.',
+        });
+      },
+    });
   }
-
 
   resetForm(): void {
     this.formCategoria = this.emptyForm();
