@@ -25,6 +25,18 @@
       </div>
       <div class="stat-foot">Ingresos menos gastos visibles</div>
     </p-card>
+    <p-card styleClass="stat-card fixed-card">
+      <div class="stat-top">
+        <span>Gastos fijos del periodo</span
+        ><span class="stat-icon"><i class="pi pi-thumbtack"></i></span>
+      </div>
+      <div class="stat-value">{{ totalFijos | currency: 'EUR' }}</div>
+      <div class="stat-foot">
+        {{ countFijos }} movimiento{{ countFijos === 1 ? '' : 's' }} fijo{{
+          countFijos === 1 ? '' : 's'
+        }}
+      </div>
+    </p-card>
     <!-- <p-card styleClass="stat-card annual-card">
       <div class="stat-top">
         <span>Balance anual</span

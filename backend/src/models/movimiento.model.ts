@@ -52,8 +52,8 @@ const movimientoSchema = new Schema<IMovimiento>(
     }, 
      tipoAhorro: {
       type: String,
-      enum: ['ing', 'revolut', 'prestamo', ''],
-      required: true
+      // enum: ['ing', 'revolut', 'prestamo', ''],
+      trim: true
     },   
     ingreso: {
       type: Number,

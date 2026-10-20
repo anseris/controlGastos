@@ -1,10 +1,11 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { Categoria, CategoriasService } from '../../services/categorias';
 import { MovimientosStore } from '../../services/movimientos-store';
@@ -29,7 +30,9 @@ interface PresupuestoCalculado {
     DialogModule,
     InputNumberModule,
     MultiSelectModule,
+    TableModule,
     CurrencyPipe,
+    DatePipe,
     DecimalPipe,
   ],
   templateUrl: './presupuestos.html',
@@ -88,6 +91,51 @@ export class Presupuestos implements OnInit {
       };
     });
   });
+
+  /** Totales del periodo sumando los tres presupuestos. */
+  readonly totalAsignado = computed(() =>
+    this.resumen().reduce((suma, item) => suma + item.importeAsignado, 0)
+  );
+
+  readonly totalGastado = computed(() =>
+    this.resumen().reduce((suma, item) => suma + item.importeGastado, 0)
+  );
+
+  readonly totalPendiente = computed(() =>
+    this.resumen().reduce((suma, item) => suma + item.importePendiente, 0)
+  );
+
+  /** Presupuesto cuya tabla de detalle está desplegada. */
+  readonly seleccionado = signal<string | null>(null);
+
+  readonly presupuestoSeleccionado = computed(
+    () => this.presupuestos().find((p) => p.clave === this.seleccionado()) ?? null
+  );
+
+  /** Gastos del periodo que componen el presupuesto seleccionado. */
+  readonly detalle = computed(() => {
+    const presupuesto = this.presupuestoSeleccionado();
+    if (!presupuesto) {
+      return [];
+    }
+    return this.movimientos().filter(
+      (m) => presupuesto.categorias.includes(m.categoria) && (m.gasto || 0) > 0
+    );
+  });
+
+  readonly detalleTitulo = computed(() => this.presupuestoSeleccionado()?.nombre ?? '');
+
+  readonly totalDetalle = computed(() =>
+    this.detalle().reduce((suma, m) => suma + (m.gasto || 0), 0)
+  );
+
+  seleccionar(clave: string): void {
+    this.seleccionado.update((actual) => (actual === clave ? null : clave));
+  }
+
+  cerrarDetalle(): void {
+    this.seleccionado.set(null);
+  }
 
   // --- Estado del modal de edición ---
   showEdit = false;

@@ -35,12 +35,31 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-movimiento>
-          <tr>
+          <tr [class.fixed-row]="movimiento.esFijo">
             <td class="date-cell">{{ movimiento.fecha | date: 'dd/MM/yyyy' }}</td>
             <td>
               <span class="description-cell">{{ movimiento.descripcion }}</span>
+              @if (movimiento.esFijo) {
+                <span class="fixed-badge" title="Movimiento fijo">Fijo</span>
+              }
             </td>
-            <td><p-tag [value]="movimiento.categoria" [rounded]="true"></p-tag></td>
+            <td>
+              @let categoria = categoriaDe(movimiento.categoria);
+              <span
+                class="categoria-tag"
+                [style.backgroundColor]="categoria?.color || '#9ca3af'"
+                [style.color]="colorTexto(categoria?.color)"
+              >
+                @if (categoria?.icono && categoria?.hasIcono) {
+                  <i [class]="categoria?.icono"></i>
+                } @else {
+                  <span class="tag-inicial">
+                    {{ categoria?.primeraLetra || movimiento.categoria.charAt(0) }}
+                  </span>
+                }
+                {{ movimiento.categoria }}
+              </span>
+            </td>
             <td class="number-col income-text">
               {{ movimiento.ingreso ? (movimiento.ingreso | currency: 'EUR') : '—' }}
             </td>
@@ -95,7 +114,6 @@
   <app-add-movimiento
     [movimiento]="movimientoEditando()"
     [showModalAddMovement]="showModal()"
-    (saved)="onSaved()"
     (modalClosed)="onModalClosed()"
   ></app-add-movimiento>
 }

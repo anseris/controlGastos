@@ -20,6 +20,12 @@ export function mesLabel(value: string): string {
   return `${MESES[(month ?? 1) - 1]} ${year}`;
 }
 
+/** Mes actual en formato `aaaa-mm` (según la fecha local del navegador). */
+export function mesActual(): string {
+  const ahora = new Date();
+  return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+}
+
 /**
  * Estado compartido del periodo seleccionado.
  *
@@ -46,14 +52,13 @@ export class MovimientosStore {
   private readonly cargado = signal(false);
 
   /** Mes seleccionado en formato `aaaa-mm`, o 'all' para todos. */
-  readonly mesSeleccionado = signal('');
+  readonly mesSeleccionado = signal(mesActual());
 
   /** Meses disponibles (formato `aaaa-mm`), de más reciente a más antiguo. */
   readonly mesesDisponibles = computed<string[]>(() => {
     const meses = new Set(this.movimientos().map((m) => m.fecha.slice(0, 7)));
     // Incluye el mes actual aunque todavía no tenga movimientos.
-    const ahora = new Date();
-    meses.add(`${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`);
+    meses.add(mesActual());
     return [...meses].sort().reverse();
   });
 

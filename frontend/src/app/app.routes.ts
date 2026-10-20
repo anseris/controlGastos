@@ -13,8 +13,12 @@ export const routes: Routes = [
           import('./features/movimientos/movimientos.component').then((m) => m.MovimientosComponent),
       },
       {
-        path: 'dashboard',
+        path: 'resumen-mensual',
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'mis-bancos',
+        loadComponent: () => import('./features/mis-bancos/mis-bancos').then((m) => m.MisBancos),
       },
       {
         path: 'categorias',
@@ -23,11 +27,6 @@ export const routes: Routes = [
       {
         path: 'presupuestos',
         loadComponent: () => import('./features/presupuestos/presupuestos').then((m) => m.Presupuestos),
-      },
-      {
-        path: 'resumen-mensual',
-        loadComponent: () =>
-          import('./features/resumen-mensual/resumen-mensual').then((m) => m.ResumenMensual),
       },
       {
         path: 'resumen-anual',

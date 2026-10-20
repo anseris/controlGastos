@@ -1,0 +1,216 @@
+@if (cargando()) {
+  <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando movimientos…</div>
+} @else if (error()) {
+  <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+} @else {
+  <div class="bancos-head">
+    <div>
+      <h2>Mis bancos</h2>
+      <p>
+        Ahorro acumulado y movimientos del periodo:
+        <strong>{{ periodoLabel() }}</strong>
+      </p>
+    </div>
+  </div>
+
+  <div class="bancos-grid">
+    <!-- ING Ahorro -->
+    <article
+      class="banco-card"
+      [class.active]="seleccionada() === 'ing'"
+      (click)="seleccionar('ing')"
+    >
+      <header class="banco-head">
+        <span class="banco-icon" style="background-color: #ff6b00">
+          <i class="pi pi-wallet"></i>
+        </span>
+        <h3>ING Ahorro</h3>
+      </header>
+
+      <div class="banco-total">
+        <span class="monto-label">Saldo actual</span>
+        <span class="monto-valor">{{ saldos().ing | currency: 'EUR' }}</span>
+        <small class="origen-hint">
+          Saldo de origen: {{ saldoOrigenIng | currency: 'EUR' }}
+        </small>
+      </div>
+
+      <div class="banco-mes">
+        <span>Este mes</span>
+        <strong>{{ saldosMes().ing | currency: 'EUR' }}</strong>
+      </div>
+    </article>
+
+    <!-- Revolut -->
+    <article
+      class="banco-card"
+      [class.active]="seleccionada() === 'revolut'"
+      (click)="seleccionar('revolut')"
+    >
+      <header class="banco-head">
+        <span class="banco-icon" style="background-color: #111827">
+          <i class="pi pi-credit-card"></i>
+        </span>
+        <h3>Revolut</h3>
+      </header>
+
+      <div class="banco-total">
+        <span class="monto-label">Saldo actual</span>
+        <span class="monto-valor">{{ saldos().revolut | currency: 'EUR' }}</span>
+        <small class="origen-hint">
+          Origen {{ saldoOrigenRevolut | currency: 'EUR' }} · ahorro ×{{ multiplicadorRevolut }}
+        </small>
+      </div>
+
+      <div class="banco-mes">
+        <span>Este mes</span>
+        <strong>{{ saldosMes().revolut | currency: 'EUR' }}</strong>
+      </div>
+    </article>
+
+    <!-- Préstamo -->
+    <article
+      class="banco-card prestamo"
+      [class.active]="seleccionada() === 'prestamo'"
+      (click)="seleccionar('prestamo')"
+    >
+      <header class="banco-head">
+        <span class="banco-icon" style="background-color: #3b82f6">
+          <i class="pi pi-building"></i>
+        </span>
+        <h3>Préstamo</h3>
+        <span class="card-edit" (click)="$event.stopPropagation()">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            ariaLabel="Editar total del préstamo"
+            (onClick)="abrirEdicionPrestamo()"
+          ></p-button>
+        </span>
+      </header>
+
+      <div class="banco-total">
+        <span class="monto-label">Total estipulado</span>
+        <span class="monto-valor">{{ prestamoTotal() | currency: 'EUR' }}</span>
+      </div>
+
+      <div class="prestamo-rows">
+        <div class="prestamo-row">
+          <span>Prestado</span>
+          <strong class="expense-text">{{ prestamoPrestado() | currency: 'EUR' }}</strong>
+        </div>
+        <div class="prestamo-row">
+          <span>Disponible</span>
+          <strong [class.negative]="prestamoDisponible() < 0">
+            {{ prestamoDisponible() | currency: 'EUR' }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="budget-bar">
+        <span
+          class="budget-bar-fill"
+          [style.width.%]="porcentajePrestamo()"
+          [class.over]="prestamoDisponible() < 0"
+        ></span>
+      </div>
+      <small class="bar-hint">
+        {{ porcentajePrestamo() | number: '1.0-0' }}% del préstamo utilizado
+      </small>
+    </article>
+  </div>
+
+  <!-- Detalle de la card clicada (mes seleccionado) -->
+  @if (seleccionada()) {
+    <section class="detalle">
+      <div class="detalle-head">
+        <div>
+          <h3>Movimientos · {{ detalleTitulo() }}</h3>
+          <small>{{ periodoLabel() }} · {{ detalle().length }} movimiento(s)</small>
+        </div>
+        <p-button
+          icon="pi pi-times"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          ariaLabel="Cerrar detalle"
+          (onClick)="cerrarDetalle()"
+        ></p-button>
+      </div>
+
+      <p-table [value]="detalle()" [rowHover]="true" styleClass="detalle-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="fecha-col">Fecha</th>
+            <th>Descripción</th>
+            <th class="importe-col">Importe</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-mov>
+          <tr>
+            <td class="fecha-col">{{ mov.fecha | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ mov.descripcion || '—' }}</td>
+            <td class="importe-col expense-text">
+              {{ mov.gasto | currency: 'EUR' }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3">
+              <div class="detalle-empty">
+                No hay movimientos de {{ detalleTitulo() }} en este periodo.
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+}
+
+<!-- Edición del total del préstamo -->
+<p-dialog
+  [(visible)]="showEditPrestamo"
+  [modal]="true"
+  (onHide)="cerrarEdicionPrestamo()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(440px, 94vw)' }"
+  header="Total del préstamo"
+  styleClass="movement-dialog"
+>
+  <form class="movement-form" (ngSubmit)="guardarPrestamoTotal()">
+    <div class="form-field">
+      <label for="prestamoTotal">Total estipulado *</label>
+      <p-inputNumber
+        inputId="prestamoTotal"
+        name="prestamoTotal"
+        [(ngModel)]="editPrestamoTotal"
+        [min]="0"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+        [step]="50"
+        [showButtons]="true"
+        suffix=" €"
+        styleClass="full-width"
+      ></p-inputNumber>
+      <small class="form-hint">
+        Los movimientos de categoría Ahorro con tipo Préstamo se descuentan de este total.
+      </small>
+    </div>
+
+    <div class="dialog-actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="cerrarEdicionPrestamo()"
+      ></p-button>
+      <p-button label="Guardar" icon="pi pi-check" type="submit"></p-button>
+    </div>
+  </form>
+</p-dialog>

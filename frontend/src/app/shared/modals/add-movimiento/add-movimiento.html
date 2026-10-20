@@ -42,50 +42,7 @@
         <small class="field-error">Introduce una descripción.</small>
       }
     </div>
-    <div class="form-columns">
-      <div class="form-field">
-        <label for="movementCategory">Categoría *</label>
-        <p-select
-          inputId="movementCategory"
-          name="category"
-          [options]="categoryOptions"
-          optionLabel="label"
-          optionValue="value"
-          [(ngModel)]="form.categoria"
-          [filter]="true"
-          appendTo="body"
-          placeholder="Selecciona una categoría"
-          styleClass="full-width"
-        >
-        </p-select>
-        @if (submitted && !form.categoria) {
-          <small class="field-error">Elige una categoría.</small>
-        }
-      </div>
-      @if(form.categoria=== 'Ahorro'){
-        <div class="form-field">
-        <label for="movementCategory">Tipo de Ahorro *</label>
-        <p-select
-          inputId="movementTipoAhorro"
-          name="tipoAhorro"
-          [options]="tipoAhorroOptions"
-          optionLabel="label"
-          optionValue="value"
-          [(ngModel)]="form.tipoAhorro"
-          [filter]="true"
-          appendTo="body"
-          placeholder="Selecciona un tipo de ahorro"
-          styleClass="full-width"
-        >
-        </p-select>
-        @if (submitted && !form.tipoAhorro) {
-          <small class="field-error">Elige un tipo de ahorro.</small>
-        }
-      </div>
-
-      }
-      
-    </div>
+    
     <div class="form-columns">
       <div class="form-field">
         <label for="movementTipo">Tipo de Movimiento *</label>
@@ -144,10 +101,55 @@
             placeholder="0,00"
           ></p-inputnumber>
           @if (submitted && form.tipo === 'Gasto' && !form.gasto) {
-            <small class="field-error">Introduce un gassto.</small>
+            <small class="field-error">Introduce un gasto.</small>
           }
         </div>
       }
+    </div>
+
+    <div class="form-columns">
+      <div class="form-field">
+        <label for="movementCategory">Categoría *</label>
+        <p-select
+          inputId="movementCategory"
+          name="category"
+          [options]="categoryOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.categoria"
+          [filter]="true"
+          appendTo="body"
+          placeholder="Selecciona una categoría"
+          styleClass="full-width"
+        >
+        </p-select>
+        @if (submitted && !form.categoria) {
+          <small class="field-error">Elige una categoría.</small>
+        }
+      </div>
+      @if(form.categoria=== 'Ahorro'){
+        <div class="form-field">
+        <label for="movementCategory">Tipo de Ahorro *</label>
+        <p-select
+          inputId="movementTipoAhorro"
+          name="tipoAhorro"
+          [options]="tipoAhorroOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.tipoAhorro"
+          [filter]="true"
+          appendTo="body"
+          placeholder="Selecciona un tipo de ahorro"
+          styleClass="full-width"
+        >
+        </p-select>
+        @if (submitted && !form.tipoAhorro) {
+          <small class="field-error">Elige un tipo de ahorro.</small>
+        }
+      </div>
+
+      }
+      
     </div>
 
 

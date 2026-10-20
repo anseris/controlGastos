@@ -43,6 +43,8 @@ const ICONOS: { label: string; value: string }[] = [
   { label: 'Compras', value: 'pi pi-shopping-bag' },
   { label: 'Educación', value: 'pi pi-book' },
   { label: 'Transporte', value: 'pi pi-truck' },
+  { label: 'Euro', value: 'pi pi-euro' },
+  { label: 'Cruz', value: 'pi pi-times' },
 ];
 
 /** Colores disponibles para la categoría. */

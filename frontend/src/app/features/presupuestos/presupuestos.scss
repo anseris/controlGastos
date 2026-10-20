@@ -92,6 +92,23 @@
   border: 1px solid var(--line, #e2e6ee);
   border-radius: 16px;
   box-shadow: 0 3px 14px rgba(29, 41, 57, 0.04);
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.presupuesto-card:hover {
+  border-color: #d3d9e6;
+  box-shadow: 0 6px 18px rgba(29, 41, 57, 0.08);
+  transform: translateY(-1px);
+}
+
+.presupuesto-card.active {
+  border-color: #4169e1;
+  box-shadow: 0 0 0 2px rgba(65, 105, 225, 0.2);
+}
+
+.card-edit {
+  margin-left: auto;
 }
 
 .card-head {
@@ -209,6 +226,102 @@
   margin-top: -6px;
   font-size: 11px;
   color: #97a1b3;
+}
+
+/* --- Total pendiente --- */
+
+.total-pendiente {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #eef4ff 0%, #f7f9fc 100%);
+  border: 1px solid #dbe5f7;
+  border-radius: 16px;
+}
+
+.total-pendiente.negative-total {
+  background: linear-gradient(135deg, #fdecec 0%, #fdf5f5 100%);
+  border-color: #f6d4d4;
+}
+
+.total-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.total-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #26334b;
+}
+
+.total-copy small {
+  font-size: 11px;
+  color: #788398;
+}
+
+.total-valor {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: #26334b;
+  white-space: nowrap;
+}
+
+.negative-total .total-valor {
+  color: #dc2626;
+}
+
+/* --- Detalle de movimientos --- */
+
+.detalle {
+  margin-top: 16px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 14px;
+  box-shadow: 0 3px 14px rgba(29, 41, 57, 0.03);
+}
+
+.detalle-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.detalle-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.detalle-head small {
+  color: #97a1b3;
+  font-size: 11px;
+}
+
+.fecha-col {
+  width: 120px;
+}
+
+.importe-col {
+  width: 140px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.detalle-empty {
+  padding: 18px;
+  text-align: center;
+  color: #97a1b3;
+  font-size: 12px;
 }
 
 /* --- Formulario del modal --- */

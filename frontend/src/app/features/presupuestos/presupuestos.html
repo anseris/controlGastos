@@ -25,7 +25,11 @@
   } @else {
     <div class="presupuestos-grid">
       @for (item of resumen(); track item.presupuesto.clave) {
-        <article class="presupuesto-card">
+        <article
+          class="presupuesto-card"
+          [class.active]="seleccionado() === item.presupuesto.clave"
+          (click)="seleccionar(item.presupuesto.clave)"
+        >
           <header class="card-head">
             <div class="card-title">
               <span
@@ -36,14 +40,16 @@
               </span>
               <h3>{{ item.presupuesto.nombre }}</h3>
             </div>
-            <p-button
-              icon="pi pi-pencil"
-              [text]="true"
-              [rounded]="true"
-              severity="secondary"
-              ariaLabel="Editar presupuesto"
-              (onClick)="abrirEdicion(item.presupuesto)"
-            ></p-button>
+            <span class="card-edit" (click)="$event.stopPropagation()">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary"
+                ariaLabel="Editar presupuesto"
+                (onClick)="abrirEdicion(item.presupuesto)"
+              ></p-button>
+            </span>
           </header>
 
           <div class="pct-row">
@@ -82,11 +88,77 @@
             ></span>
           </div>
           <small class="bar-hint">
-            {{ porcentajeGastado(item) | number: '1.0-0' }}% del asignado consumido
+            {{ porcentajeGastado(item) | number: '1.0-0' }}% del asignado consumido ·
+            pulsa para ver movimientos
           </small>
         </article>
       }
     </div>
+
+    <!-- Total pendiente de los tres presupuestos -->
+    <section class="total-pendiente" [class.negative-total]="totalPendiente() < 0">
+      <div class="total-copy">
+        <span class="total-label">Importe total pendiente</span>
+        <small>
+          Asignado {{ totalAsignado() | currency: 'EUR' }} · Gastado
+          {{ totalGastado() | currency: 'EUR' }}
+        </small>
+      </div>
+      <span class="total-valor">{{ totalPendiente() | currency: 'EUR' }}</span>
+    </section>
+
+    <!-- Detalle de los movimientos del presupuesto clicado -->
+    @if (seleccionado()) {
+      <section class="detalle">
+        <div class="detalle-head">
+          <div>
+            <h3>Movimientos · {{ detalleTitulo() }}</h3>
+            <small>
+              {{ detalle().length }} movimiento(s) ·
+              {{ totalDetalle() | currency: 'EUR' }}
+            </small>
+          </div>
+          <p-button
+            icon="pi pi-times"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            ariaLabel="Cerrar detalle"
+            (onClick)="cerrarDetalle()"
+          ></p-button>
+        </div>
+
+        <p-table [value]="detalle()" [rowHover]="true" styleClass="detalle-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="fecha-col">Fecha</th>
+              <th>Descripción</th>
+              <th>Categoría</th>
+              <th class="importe-col">Importe</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-mov>
+            <tr>
+              <td class="fecha-col">{{ mov.fecha | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ mov.descripcion || '—' }}</td>
+              <td>{{ mov.categoria }}</td>
+              <td class="importe-col expense-text">
+                {{ mov.gasto | currency: 'EUR' }}
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4">
+                <div class="detalle-empty">
+                  No hay gastos de {{ detalleTitulo() }} en este periodo.
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </section>
+    }
   }
 }
 

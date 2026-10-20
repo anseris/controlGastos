@@ -16,7 +16,9 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
+import { Observable, of } from 'rxjs';
 import { CrearMovimiento, Movimiento, MovimientosService } from '../../../services/movimientos';
+import { MovimientosStore } from '../../../services/movimientos-store';
 import { CategoriasService } from '../../../services/categorias';
 
 // const CATEGORIAS = [
@@ -60,6 +62,7 @@ export class AddMovimiento implements OnChanges {
 
   private readonly movimientosService = inject(MovimientosService);
  private readonly categoriasService = inject(CategoriasService);
+  private readonly movimientosStore = inject(MovimientosStore);
   private readonly messages = inject(MessageService);
 
   submitted = false;
@@ -147,12 +150,16 @@ export class AddMovimiento implements OnChanges {
     };
   }
 
-  private loadCategorias(): void {
+  private loadCategorias(tipo?: string): void {
     // this.cargando.set(true);
     // this.error.set('');
     this.categoriasService.obtenerCategorias().subscribe({
       next: (datos) => {
-        let CATEGORIAS = datos.map(datos => datos.nombre);
+        let datosFiltrados = datos
+        if(tipo){
+          datosFiltrados = datos.filter((item) => item.tipo === tipo)
+        } 
+        let CATEGORIAS = datosFiltrados.map(datosFiltrados => datosFiltrados.nombre);
         this.categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
       },
       error: (err) => {
@@ -162,6 +169,10 @@ export class AddMovimiento implements OnChanges {
       },
     });
   }
+
+ 
+
+
 
   saveMovement(): void {
     this.submitted = true;
@@ -217,11 +228,23 @@ export class AddMovimiento implements OnChanges {
             ? 'El movimiento se ha actualizado correctamente.'
             : 'El movimiento se ha guardado correctamente.'
         });
-        if(this.tieneRedondeo){
-          this.addRedondeo(this.form)
-        }
-        this.saved.emit(movimiento);
-        this.closeModal();
+
+        // El redondeo (si procede) se guarda antes de recargar la lista para
+        // que la tabla muestre también ese movimiento. Solo se genera al crear
+        // un gasto: al editar no debe duplicarse ni sobrescribir el original.
+        const redondeo$: Observable<Movimiento | null> =
+          this.tieneRedondeo && !this.editing && this.form.tipo === 'Gasto'
+            ? this.addRedondeo(this.form)
+            : of(null);
+
+        redondeo$.subscribe({
+          next: () => this.finalizarGuardado(movimiento),
+          error: (err: unknown) => {
+            console.error('Error al guardar el redondeo:', err);
+            // El movimiento principal ya se guardó: refrescamos igualmente.
+            this.finalizarGuardado(movimiento);
+          },
+        });
       },
       error: (err) => {
         this.guardando = false;
@@ -235,7 +258,21 @@ export class AddMovimiento implements OnChanges {
     });
   }
 
+  /**
+   * Refresca el listado compartido y cierra el modal.
+   *
+   * La recarga se hace aquí (y no en cada padre) para que la tabla se
+   * actualice también cuando el alta se lanza desde el botón del header.
+   */
+  private finalizarGuardado(movimiento: Movimiento): void {
+    this.movimientosStore.cargar(true).subscribe();
+    this.saved.emit(movimiento);
+    this.closeModal();
+  }
+
   onTipoChange(): void {
+    let tipo = this.form.tipo.toLowerCase()
+    this.loadCategorias(tipo)
     if (this.form.tipo === 'Ingreso') {
       this.form.gasto = null;
     } else {
@@ -255,70 +292,33 @@ export class AddMovimiento implements OnChanges {
     this.guardando = false;
   }
 
-  addRedondeo(form: any): void {
-    this.submitted = true;
-
-    // Validación de campos obligatorios (igual que marca la plantilla).
-    
+  /**
+   * Crea el movimiento de redondeo asociado a un gasto.
+   * Devuelve el observable para poder recargar la lista cuando termine.
+   */
+  private addRedondeo(form: {
+    fecha: Date | null;
+    gasto: number | null;
+    ingreso: number | null;
+  }): Observable<Movimiento> {
     const valor = Number(form.gasto || 0);
-
-    const unidadSuperior = Math.ceil(valor); // 6
+    const unidadSuperior = Math.ceil(valor);
     const diferencia = Math.round((unidadSuperior - valor) * 100) / 100;
-    const gasto = diferencia;
-    const ingreso = Number(form.ingreso || 0);
 
-
-    // Cuerpo que espera el backend (POST /api/movimientos).
     const payload: CrearMovimiento = {
       // El backend guarda la fecha como string en formato `aaaa-mm-dd`.
-      fecha: this.formatFecha(form.fecha),
+      fecha: form.fecha ? this.formatFecha(form.fecha) : new Date().toISOString().slice(0, 10),
       descripcion: 'Redondeo',
       categoria: 'Ahorro',
-      tipoAhorro:'ing',
-      ingreso,
-      gasto,
+      tipoAhorro: 'ing',
+      ingreso: Number(form.ingreso || 0),
+      gasto: diferencia,
       // El backend valida el enum en minúsculas: 'ingreso' | 'gasto'.
       tipo: 'gasto',
       esFijo: false,
     };
 
-    
-
-
- 
-
-    this.guardando = true;
-
-    // En modo edición se actualiza el movimiento existente; si no, se crea uno nuevo.
-    const peticion$ =
-      this.editing && this.movimiento
-        ? this.movimientosService.actualizarMovimiento(this.movimiento._id, payload)
-        : this.movimientosService.crearMovimiento(payload);
-
-    peticion$.subscribe({
-      next: (movimiento) => {
-        this.guardando = false;
-        this.messages.add({
-          severity: 'success',
-          summary: this.editing ? 'Actualizado' : 'Guardado',
-          detail: this.editing
-            ? 'El movimiento se ha actualizado correctamente.'
-            : 'El movimiento se ha guardado correctamente.'
-        });
-        
-        this.saved.emit(movimiento);
-        this.closeModal();
-      },
-      error: (err) => {
-        this.guardando = false;
-        console.error('Error al guardar el movimiento:', err);
-        this.messages.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: err?.error?.mensaje ?? 'No se pudo guardar el movimiento.'
-        });
-      }
-    });
+    return this.movimientosService.crearMovimiento(payload);
   }
 
   
