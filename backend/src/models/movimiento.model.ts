@@ -7,6 +7,7 @@ export interface IMovimiento {
   fecha: string;
   descripcion: string;
   categoria: string;
+  tipoAhorro: string;
   ingreso: number;
   gasto: number;
   tipo: string;
@@ -48,7 +49,12 @@ const movimientoSchema = new Schema<IMovimiento>(
       type: String,
       required: true,
       trim: true
-    },    
+    }, 
+     tipoAhorro: {
+      type: String,
+      enum: ['ing', 'revolut', 'prestamo', ''],
+      required: true
+    },   
     ingreso: {
       type: Number,
       required: true,

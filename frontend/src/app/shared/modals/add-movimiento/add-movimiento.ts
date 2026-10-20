@@ -26,6 +26,7 @@ import { CategoriasService } from '../../../services/categorias';
 // ];
 
 const TIPO = ['Ingreso', 'Gasto'];
+const TIPO_AHORRO = ['ING Ahorro', 'Revolut', 'Préstamo'];
 
 @Component({
   selector: 'app-add-movimiento',
@@ -69,11 +70,13 @@ export class AddMovimiento implements OnChanges {
 
   // readonly categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
   readonly typeMovimiento = TIPO.map(value => ({ label: value, value }));
+  readonly tipoAhorroOptions = TIPO_AHORRO.map(value => ({ label: value, value }));
 
   form: {
     fecha: Date | null;
     descripcion: string;
     categoria: string;
+    tipoAhorro: string;
     ingreso: number | null;
     gasto: number | null;
     tipo: string;
@@ -85,6 +88,7 @@ export class AddMovimiento implements OnChanges {
       fecha: new Date(),
       descripcion: '',
       categoria: '',
+      tipoAhorro: '',
       ingreso: null as number | null,
       gasto: null as number | null,
       tipo: '',
@@ -135,6 +139,7 @@ export class AddMovimiento implements OnChanges {
       fecha: movimiento.fecha ? this.parseFecha(movimiento.fecha) : new Date(),
       descripcion: movimiento.descripcion ?? '',
       categoria: movimiento.categoria ?? '',
+      tipoAhorro: movimiento.tipoAhorro ?? '',
       ingreso: tipo === 'Ingreso' ? this.movimiento?.ingreso || null : null,
       gasto: tipo === 'Gasto' ? this.movimiento?.gasto || null : null,
       tipo,
@@ -184,6 +189,7 @@ export class AddMovimiento implements OnChanges {
       fecha: this.formatFecha(this.form.fecha),
       descripcion: this.form.descripcion.trim(),
       categoria: this.form.categoria,
+      tipoAhorro: this.formaTipoAhorro(),
       ingreso,
       gasto,
       // El backend valida el enum en minúsculas: 'ingreso' | 'gasto'.
@@ -261,14 +267,6 @@ export class AddMovimiento implements OnChanges {
     const gasto = diferencia;
     const ingreso = Number(form.ingreso || 0);
 
-    // if ((ingreso > 0 && gasto > 0) || (ingreso <= 0 && gasto <= 0)) {
-    //   this.messages.add({
-    //     severity: 'warn',
-    //     summary: 'Importe incorrecto',
-    //     detail: 'Introduce un ingreso o un gasto, pero no ambos.'
-    //   });
-    //   return;
-    // }
 
     // Cuerpo que espera el backend (POST /api/movimientos).
     const payload: CrearMovimiento = {
@@ -276,6 +274,7 @@ export class AddMovimiento implements OnChanges {
       fecha: this.formatFecha(form.fecha),
       descripcion: 'Redondeo',
       categoria: 'Ahorro',
+      tipoAhorro:'ing',
       ingreso,
       gasto,
       // El backend valida el enum en minúsculas: 'ingreso' | 'gasto'.
@@ -321,5 +320,20 @@ export class AddMovimiento implements OnChanges {
       }
     });
   }
+
+  
+  formaTipoAhorro(): string {
+    if(this.form.tipoAhorro === 'ING Ahorro'){
+      return 'ing'
+    } else if(this.form.tipoAhorro === 'Revolut'){
+      return 'revolut'
+    } else if(this.form.tipoAhorro === 'Préstamo'){
+      return 'prestamo'   
+    } else {
+      return ''
+    }
+  }
+
+  
 
 }

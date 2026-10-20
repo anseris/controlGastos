@@ -62,15 +62,29 @@
           <small class="field-error">Elige una categoría.</small>
         }
       </div>
-
-      <div class="form-field">
-        <div class="mt-5">
-          <p-checkbox [(ngModel)]="form.esFijo" name="esFijo" [binary]="true" inputId="esFijo">
-          </p-checkbox>
-
-          <label for="esFijo"> Movimiento fijo </label>
-        </div>
+      @if(form.categoria=== 'Ahorro'){
+        <div class="form-field">
+        <label for="movementCategory">Tipo de Ahorro *</label>
+        <p-select
+          inputId="movementTipoAhorro"
+          name="tipoAhorro"
+          [options]="tipoAhorroOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.tipoAhorro"
+          [filter]="true"
+          appendTo="body"
+          placeholder="Selecciona un tipo de ahorro"
+          styleClass="full-width"
+        >
+        </p-select>
+        @if (submitted && !form.tipoAhorro) {
+          <small class="field-error">Elige un tipo de ahorro.</small>
+        }
       </div>
+
+      }
+      
     </div>
     <div class="form-columns">
       <div class="form-field">
@@ -135,14 +149,39 @@
         </div>
       }
     </div>
-    <div class="form-field">
-        <div class="mt-5">
+
+
+
+    <div class="form-columns">
+      <div class="form-field">
+        
+        <div class="">
+          <p-checkbox [(ngModel)]="form.esFijo" name="esFijo" [binary]="true" inputId="esFijo">
+          </p-checkbox>
+
+          <label for="esFijo"> Movimiento fijo </label>
+        </div>
+     
+        
+      </div>
+
+       <div class="form-field">
+        <div class="">
           <p-checkbox [(ngModel)]="tieneRedondeo" name="tieneRedondeo" [binary]="true" inputId="tieneRedondeo">
           </p-checkbox>
 
           <label for="tieneRedondeo"> Tiene redondeo </label>
         </div>
       </div>
+
+
+
+   
+    </div>
+
+
+
+   
     <div class="form-hint">
       <i class="pi pi-info-circle"></i> Selecciona el tipo y introduce el importe correspondiente.
     </div>

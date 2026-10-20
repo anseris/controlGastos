@@ -1,0 +1,172 @@
+@if (cargando()) {
+  <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando presupuestos…</div>
+} @else if (error()) {
+  <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+} @else {
+  <div class="presupuestos-head">
+    <div>
+      <h2>Presupuestos</h2>
+      <p>
+        Calculados sobre los ingresos del periodo:
+        <strong>{{ totalIngresos() | currency: 'EUR' }}</strong>
+      </p>
+    </div>
+    <span class="total-pct" [class.over]="totalPorcentaje() > 100">
+      Total asignado: {{ totalPorcentaje() | number: '1.0-1' }}%
+    </span>
+  </div>
+
+  @if (presupuestos().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox"></i>
+      <strong>No hay presupuestos</strong>
+      <span>Vuelve a cargar la página para crearlos.</span>
+    </div>
+  } @else {
+    <div class="presupuestos-grid">
+      @for (item of resumen(); track item.presupuesto.clave) {
+        <article class="presupuesto-card">
+          <header class="card-head">
+            <div class="card-title">
+              <span
+                class="card-icon"
+                [style.backgroundColor]="colorFor(item.presupuesto.clave)"
+              >
+                <i [class]="iconFor(item.presupuesto.clave)"></i>
+              </span>
+              <h3>{{ item.presupuesto.nombre }}</h3>
+            </div>
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              severity="secondary"
+              ariaLabel="Editar presupuesto"
+              (onClick)="abrirEdicion(item.presupuesto)"
+            ></p-button>
+          </header>
+
+          <div class="pct-row">
+            <span class="pct">{{ item.presupuesto.porcentaje | number: '1.0-2' }}%</span>
+            <span class="pct-label">de los ingresos</span>
+          </div>
+
+          <div class="montos">
+            <div class="monto">
+              <span class="monto-label">Asignado</span>
+              <span class="monto-valor">{{ item.importeAsignado | currency: 'EUR' }}</span>
+            </div>
+            <div class="monto">
+              <span class="monto-label">Gastado</span>
+              <span class="monto-valor expense-text">
+                {{ item.importeGastado | currency: 'EUR' }}
+              </span>
+            </div>
+            <div class="monto">
+              <span class="monto-label">Pendiente</span>
+              <span
+                class="monto-valor"
+                [class.income-text]="item.importePendiente >= 0"
+                [class.negative]="item.importePendiente < 0"
+              >
+                {{ item.importePendiente | currency: 'EUR' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="budget-bar">
+            <span
+              class="budget-bar-fill"
+              [style.width.%]="porcentajeGastado(item)"
+              [class.over]="item.importeGastado > item.importeAsignado"
+            ></span>
+          </div>
+          <small class="bar-hint">
+            {{ porcentajeGastado(item) | number: '1.0-0' }}% del asignado consumido
+          </small>
+        </article>
+      }
+    </div>
+  }
+}
+
+<!-- Modal para editar porcentaje y categorías -->
+<p-dialog
+  [(visible)]="showEdit"
+  [modal]="true"
+  (onHide)="cerrarEdicion()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(500px, 94vw)' }"
+  [header]="'Editar ' + (editando()?.nombre ?? 'presupuesto')"
+  styleClass="movement-dialog"
+>
+  <form class="movement-form" (ngSubmit)="guardarEdicion()">
+    <div class="form-field">
+      <label for="editPorcentaje">Porcentaje sobre los ingresos *</label>
+      <p-inputNumber
+        inputId="editPorcentaje"
+        name="porcentaje"
+        [(ngModel)]="editPorcentaje"
+        [min]="0"
+        [max]="100"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        [step]="0.1"
+        [showButtons]="true"
+        suffix=" %"
+        styleClass="full-width"
+      ></p-inputNumber>
+      <small class="form-hint">
+        Se aplicará sobre los ingresos del periodo
+        ({{ totalIngresos() | currency: 'EUR' }}).
+      </small>
+    </div>
+
+    <div class="form-field">
+      <label for="editCategorias">Categorías que suman como gastado</label>
+      <p-multiSelect
+        inputId="editCategorias"
+        name="categorias"
+        [options]="categoriasGasto()"
+        optionLabel="nombre"
+        optionValue="nombre"
+        [(ngModel)]="editCategorias"
+        placeholder="Selecciona categorías"
+        display="chip"
+        appendTo="body"
+        [filter]="true"
+        filterPlaceholder="Buscar categoría"
+        styleClass="full-width"
+      ></p-multiSelect>
+      @if (catCargando()) {
+        <small class="form-hint">Cargando categorías…</small>
+      } @else if (categoriasGasto().length === 0) {
+        <small class="form-hint">
+          Todavía no hay categorías de gasto. Créalas en la sección Categorías.
+        </small>
+      } @else {
+        <small class="form-hint">
+          Los gastos de estas categorías se descontarán de este presupuesto.
+        </small>
+      }
+    </div>
+
+    <div class="dialog-actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="cerrarEdicion()"
+      ></p-button>
+      <p-button
+        label="Guardar"
+        icon="pi pi-check"
+        type="submit"
+        [loading]="guardando"
+        [disabled]="guardando"
+      ></p-button>
+    </div>
+  </form>
+</p-dialog>

@@ -16,6 +16,7 @@ export interface Movimiento {
   fecha: string;
   descripcion: string;
   categoria: string;
+  tipoAhorro: string;
   ingreso: number;
   gasto: number;
   tipo: string;
@@ -29,6 +30,7 @@ export interface Movimiento {
  */
 export interface CrearMovimiento {
   categoria: string;
+  tipoAhorro: string;
   ingreso: number;
   gasto: number;
   tipo: TipoMovimiento | string;

@@ -21,6 +21,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/categorias/categorias').then((m) => m.Categorias),
       },
       {
+        path: 'presupuestos',
+        loadComponent: () => import('./features/presupuestos/presupuestos').then((m) => m.Presupuestos),
+      },
+      {
         path: 'resumen-mensual',
         loadComponent: () =>
           import('./features/resumen-mensual/resumen-mensual').then((m) => m.ResumenMensual),
