@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 /** Base de la API del backend (Express en el puerto 3000). */
-const API_BASE = 'http://localhost:3000/api';
+// const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://controlgastos-8fb2.onrender.com/api';
 
 /** Valores admitidos por el enum `tipo` del modelo Mongoose. */
 export type TipoMovimiento = 'ingreso' | 'gasto';

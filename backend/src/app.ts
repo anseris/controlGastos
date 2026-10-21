@@ -7,7 +7,10 @@ import presupuestosRoutes from './routes/presupuestos.routes.js';
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:4200'
+  origin: [
+    'http://localhost:4200',
+    'https://autumn-snow-61c8.anseris51-2f5.workers.dev'
+  ]
 }));
 
 app.use(express.json());

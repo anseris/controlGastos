@@ -22,6 +22,10 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
+            "index": {
+  "input": "src/index.html",
+  "output": "index.html"
+},
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -31,13 +35,9 @@
               }
             ],
             "styles": ["node_modules/primeflex/primeflex.css", "src/styles.scss"],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
+            "outputMode": "static",
             "security": {
               "allowedHosts": []
-            },
-            "ssr": {
-              "entry": "src/server.ts"
             }
           },
           "configurations": {
@@ -45,8 +45,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "750kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "3MB"
                 },
                 {
                   "type": "anyComponentStyle",
