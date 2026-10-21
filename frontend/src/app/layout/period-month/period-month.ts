@@ -44,7 +44,7 @@ export class PeriodMonth implements OnInit {
 
   /** Etiqueta legible de un mes (`aaaa-mm`). */
   monthLabel(value: string): string {
-    return mesLabel(value);
+    return mesLabel(value).charAt(0).toUpperCase() + mesLabel(value).slice(1);
   }
 
   private emitirFiltrados(): void {

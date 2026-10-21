@@ -3,6 +3,7 @@ import cors from 'cors';
 import movimientosRoutes from './routes/movimientos.routes.js';
 import categoriasRoutes from './routes/categorias.routes.js';
 import presupuestosRoutes from './routes/presupuestos.routes.js';
+import cuentasBancoRoutes from './routes/cuentas-banco.routes.js';
 
 const app = express();
 
@@ -25,5 +26,6 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/presupuestos', presupuestosRoutes);
+app.use('/api/cuentas-banco', cuentasBancoRoutes);
 
 export default app;

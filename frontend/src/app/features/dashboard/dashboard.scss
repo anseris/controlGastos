@@ -1,0 +1,58 @@
+/* --- Porcentaje respecto a los ingresos y barra --- */
+
+.stat-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.stat-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: #788398;
+}
+
+.stat-pct.negative {
+  color: #c34b5a;
+}
+
+.stat-bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  background: #eef1f7;
+  border-radius: 999px;
+}
+
+.stat-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.income-card .stat-bar-fill {
+  background: #16855e;
+}
+
+.expense-card .stat-bar-fill {
+  background: #c34b5a;
+}
+
+.balance-card .stat-bar-fill {
+  background: #4169e1;
+}
+
+.fixed-card .stat-bar-fill {
+  background: #b45309;
+}
+
+/* Cuando el gasto supera los ingresos, la barra se llena con rayas */
+.stat-bar-fill.over {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.35) 0 5px,
+    transparent 5px 10px
+  );
+}

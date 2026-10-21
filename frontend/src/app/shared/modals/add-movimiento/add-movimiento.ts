@@ -6,6 +6,7 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  computed,
   inject,
 } from '@angular/core';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -20,6 +21,7 @@ import { Observable, of } from 'rxjs';
 import { CrearMovimiento, Movimiento, MovimientosService } from '../../../services/movimientos';
 import { MovimientosStore } from '../../../services/movimientos-store';
 import { CategoriasService } from '../../../services/categorias';
+import { BancosService } from '../../../services/bancos';
 
 // const CATEGORIAS = [
 //   'Sueldo', 'Otros ingresos', 'Casa', 'Prestamo', 'Internet', 'Ayuntamiento', 'Luz',
@@ -28,7 +30,6 @@ import { CategoriasService } from '../../../services/categorias';
 // ];
 
 const TIPO = ['Ingreso', 'Gasto'];
-const TIPO_AHORRO = ['ING Ahorro', 'Revolut', 'Préstamo'];
 
 @Component({
   selector: 'app-add-movimiento',
@@ -50,6 +51,7 @@ export class AddMovimiento implements OnChanges {
   /** Movimiento que se está editando. Si es `null` el modal crea uno nuevo. */
   @Input() movimiento: Movimiento | null = null;
   @Input() showModalAddMovement: boolean = false;
+  @Input() esTraspaso: boolean = false;
 
   @Output() modalClosed = new EventEmitter<void>();
   /** Emite el movimiento guardado (creado o actualizado) para que el padre refresque la lista. */
@@ -61,7 +63,8 @@ export class AddMovimiento implements OnChanges {
   }
 
   private readonly movimientosService = inject(MovimientosService);
- private readonly categoriasService = inject(CategoriasService);
+  private readonly categoriasService = inject(CategoriasService);
+  private readonly bancosService = inject(BancosService);
   private readonly movimientosStore = inject(MovimientosStore);
   private readonly messages = inject(MessageService);
 
@@ -73,7 +76,13 @@ export class AddMovimiento implements OnChanges {
 
   // readonly categoryOptions = CATEGORIAS.map(value => ({ label: value, value }));
   readonly typeMovimiento = TIPO.map(value => ({ label: value, value }));
-  readonly tipoAhorroOptions = TIPO_AHORRO.map(value => ({ label: value, value }));
+  /** Cuentas configuradas en Mis bancos; el valor guardado es su id (`tipoAhorro`). */
+  readonly tipoAhorroOptions = computed(() =>
+    this.bancosService.cuentas().map((cuenta) => ({
+      label: cuenta.nombre,
+      value: cuenta.id,
+    }))
+  );
 
   form: {
     fecha: Date | null;
@@ -100,6 +109,13 @@ export class AddMovimiento implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Las cuentas se guardan en la BBDD: se cargan al abrir el modal.
+    if (changes['movimiento'] || changes['showModalAddMovement']?.currentValue === true) {
+      this.bancosService.cargar().subscribe({
+        error: (err) => console.error('Error al cargar las cuentas:', err),
+      });
+    }
+
     // Rellena el formulario cuando cambia el movimiento a editar o se abre el modal.
     if (changes['movimiento']) {
       this.loadForm();
@@ -107,7 +123,7 @@ export class AddMovimiento implements OnChanges {
     } else if (changes['showModalAddMovement'] && changes['showModalAddMovement'].currentValue) {
       this.submitted = false;
       this.loadForm();
-       this.loadCategorias()
+      this.loadCategorias()
     }
   }
 
@@ -322,16 +338,9 @@ export class AddMovimiento implements OnChanges {
   }
 
   
+  /** El formulario ya guarda el id de la cuenta, que es lo que espera el backend. */
   formaTipoAhorro(): string {
-    if(this.form.tipoAhorro === 'ING Ahorro'){
-      return 'ing'
-    } else if(this.form.tipoAhorro === 'Revolut'){
-      return 'revolut'
-    } else if(this.form.tipoAhorro === 'Préstamo'){
-      return 'prestamo'   
-    } else {
-      return ''
-    }
+    return this.form.tipoAhorro || '';
   }
 
   

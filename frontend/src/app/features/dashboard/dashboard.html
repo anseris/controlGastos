@@ -6,6 +6,12 @@
       </div>
       <div class="stat-value">{{ totalIngresos | currency: 'EUR' }}</div>
       <div class="stat-foot">Ingresos registrados</div>
+      <div class="stat-metric">
+        <span class="stat-pct">{{ pctIngresos | number: '1.0-2' }}% de los ingresos</span>
+        <span class="stat-bar">
+          <span class="stat-bar-fill" [style.width.%]="barraPct(pctIngresos)"></span>
+        </span>
+      </div>
     </p-card>
     <p-card styleClass="stat-card expense-card">
       <div class="stat-top">
@@ -14,6 +20,18 @@
       </div>
       <div class="stat-value">{{ totalGastos | currency: 'EUR' }}</div>
       <div class="stat-foot">Gastos registrados</div>
+      <div class="stat-metric">
+        <span class="stat-pct" [class.negative]="pctGastos > 100">
+          {{ pctGastos | number: '1.0-2' }}% de los ingresos
+        </span>
+        <span class="stat-bar">
+          <span
+            class="stat-bar-fill"
+            [class.over]="pctGastos > 100"
+            [style.width.%]="barraPct(pctGastos)"
+          ></span>
+        </span>
+      </div>
     </p-card>
     <p-card styleClass="stat-card balance-card">
       <div class="stat-top">
@@ -24,6 +42,14 @@
         {{ balanceTotal | currency: 'EUR' }}
       </div>
       <div class="stat-foot">Ingresos menos gastos visibles</div>
+      <div class="stat-metric">
+        <span class="stat-pct" [class.negative]="pctBalance < 0">
+          {{ pctBalance | number: '1.0-2' }}% de los ingresos
+        </span>
+        <span class="stat-bar">
+          <span class="stat-bar-fill" [style.width.%]="barraPct(pctBalance)"></span>
+        </span>
+      </div>
     </p-card>
     <p-card styleClass="stat-card fixed-card">
       <div class="stat-top">
@@ -35,6 +61,12 @@
         {{ countFijos }} movimiento{{ countFijos === 1 ? '' : 's' }} fijo{{
           countFijos === 1 ? '' : 's'
         }}
+      </div>
+      <div class="stat-metric">
+        <span class="stat-pct">{{ pctFijos | number: '1.0-2' }}% de los ingresos</span>
+        <span class="stat-bar">
+          <span class="stat-bar-fill" [style.width.%]="barraPct(pctFijos)"></span>
+        </span>
       </div>
     </p-card>
     <!-- <p-card styleClass="stat-card annual-card">

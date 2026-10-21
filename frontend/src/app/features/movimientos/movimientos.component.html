@@ -5,7 +5,13 @@
         <h2>Movimientos</h2>
         <p>Consulta de tus apuntes cargados desde el backend.</p>
       </div>
-      <span class="count-pill">{{ movimientos().length }} movimientos</span>
+      <span class="count-pill">
+        @if (hayFiltros()) {
+          {{ movimientosVisibles().length }} de {{ movimientos().length }} movimientos
+        } @else {
+          {{ movimientos().length }} movimientos
+        }
+      </span>
     </div>
   </ng-template>
 
@@ -15,8 +21,74 @@
     } @else if (error()) {
       <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
     } @else {
+      <div class="movements-filters">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar por descripción o categoría…"
+            aria-label="Buscar movimientos"
+            autocomplete="off"
+            [ngModel]="busqueda()"
+            (ngModelChange)="onBusquedaChange($event)"
+          />
+          @if (busqueda()) {
+            <button
+              type="button"
+              class="search-clear"
+              aria-label="Limpiar búsqueda"
+              (click)="onBusquedaChange('')"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          }
+        </div>
+
+        <div class="filter-field">
+          <label for="tipoFilter">Tipo</label>
+          <p-select
+            inputId="tipoFilter"
+            [options]="tipos"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="filtroTipo()"
+            (onChange)="onTipoChange($event.value)"
+            styleClass="filter-select"
+          ></p-select>
+        </div>
+
+        <div class="filter-field">
+          <label for="fijoFilter">Fijos</label>
+          <p-select
+            inputId="fijoFilter"
+            [options]="opcionesFijo"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="filtroFijo()"
+            (onChange)="onFijoChange($event.value)"
+            styleClass="filter-select"
+          ></p-select>
+        </div>
+
+        @if (hayFiltros()) {
+          <p-button
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            [text]="true"
+            severity="secondary"
+            (onClick)="limpiarFiltros()"
+          ></p-button>
+        }
+
+        <span class="filter-count">
+          {{ movimientosVisibles().length }} de {{ movimientos().length }}
+        </span>
+      </div>
+
       <p-table
-        [value]="movimientos()"
+        #tabla
+        [value]="movimientosVisibles()"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50]"
@@ -97,11 +169,25 @@
         <ng-template pTemplate="emptymessage">
           <tr>
             <td colspan="7">
-              <div class="empty-state">
-                <i class="pi pi-inbox"></i>
-                <strong>No hay movimientos</strong>
-                <span>Añade un movimiento para verlo aquí.</span>
-              </div>
+              @if (hayFiltros()) {
+                <div class="empty-state">
+                  <i class="pi pi-filter-slash"></i>
+                  <strong>Sin resultados</strong>
+                  <span>No hay movimientos que coincidan con los filtros.</span>
+                  <p-button
+                    label="Limpiar filtros"
+                    icon="pi pi-filter-slash"
+                    [text]="true"
+                    (onClick)="limpiarFiltros()"
+                  ></p-button>
+                </div>
+              } @else {
+                <div class="empty-state">
+                  <i class="pi pi-inbox"></i>
+                  <strong>No hay movimientos</strong>
+                  <span>Añade un movimiento para verlo aquí.</span>
+                </div>
+              }
             </td>
           </tr>
         </ng-template>

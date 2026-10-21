@@ -105,6 +105,7 @@
         </small>
       </div>
       <span class="total-valor">{{ totalPendiente() | currency: 'EUR' }}</span>
+      <p-button label="Nuevo movimiento" icon="pi pi-plus" (onClick)="hacerTraspaso()" ></p-button>
     </section>
 
     <!-- Detalle de los movimientos del presupuesto clicado -->
@@ -242,3 +243,7 @@
     </div>
   </form>
 </p-dialog>
+
+@if (showModalAddMovement) {
+    <app-add-movimiento [showModalAddMovement]="showModalAddMovement" [esTraspaso]="true"  (modalClosed)="returnCloseModal()"></app-add-movimiento>
+  }

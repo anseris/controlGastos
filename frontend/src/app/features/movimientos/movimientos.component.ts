@@ -1,7 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -15,6 +18,9 @@ import { AddMovimiento } from '../../shared/modals/add-movimiento/add-movimiento
   imports: [
     CardModule,
     TableModule,
+    InputTextModule,
+    SelectModule,
+    FormsModule,
     DatePipe,
     CurrencyPipe,
     ButtonModule,
@@ -46,6 +52,66 @@ export class MovimientosComponent implements OnInit {
   /** Índice por nombre (en minúsculas) para buscar la categoría de un movimiento. */
   private readonly categoriasPorNombre = computed(
     () => new Map(this.categorias().map((c) => [c.nombre.toLowerCase(), c]))
+  );
+
+  /** Referencia a la tabla para volver a la primera página al filtrar. */
+  @ViewChild('tabla') private tabla?: Table;
+
+  /** Opciones de los selects de filtro. */
+  readonly tipos = [
+    { label: 'Todos', value: 'todos' },
+    { label: 'Ingresos', value: 'ingreso' },
+    { label: 'Gastos', value: 'gasto' },
+  ];
+
+  readonly opcionesFijo = [
+    { label: 'Todos', value: 'todos' },
+    { label: 'Solo fijos', value: 'fijos' },
+    { label: 'No fijos', value: 'no-fijos' },
+  ];
+
+  /** Texto del buscador (descripción o categoría). */
+  readonly busqueda = signal('');
+  /** Filtro por tipo de movimiento. */
+  readonly filtroTipo = signal<'todos' | 'ingreso' | 'gasto'>('todos');
+  /** Filtro por movimientos fijos. */
+  readonly filtroFijo = signal<'todos' | 'fijos' | 'no-fijos'>('todos');
+
+  /** Movimientos del periodo que pasan por el buscador y los filtros. */
+  readonly movimientosVisibles = computed<Movimiento[]>(() => {
+    const texto = this.busqueda().trim().toLowerCase();
+    const tipo = this.filtroTipo();
+    const fijo = this.filtroFijo();
+
+    return this.movimientos().filter((m) => {
+      if (tipo === 'ingreso' && !(m.ingreso > 0)) {
+        return false;
+      }
+      if (tipo === 'gasto' && !(m.gasto > 0)) {
+        return false;
+      }
+      if (fijo === 'fijos' && !m.esFijo) {
+        return false;
+      }
+      if (fijo === 'no-fijos' && m.esFijo) {
+        return false;
+      }
+      if (texto) {
+        const contenido = `${m.descripcion ?? ''} ${m.categoria ?? ''}`.toLowerCase();
+        if (!contenido.includes(texto)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  });
+
+  /** Indica si hay algún filtro activo. */
+  readonly hayFiltros = computed(
+    () =>
+      this.busqueda().trim() !== '' ||
+      this.filtroTipo() !== 'todos' ||
+      this.filtroFijo() !== 'todos'
   );
 
   /** Controla la visibilidad del modal de alta/edición. */
@@ -89,6 +155,43 @@ export class MovimientosComponent implements OnInit {
     return luminancia > 160 ? '#1f2937' : '#ffffff';
   }
 
+  /** Actualiza el buscador y vuelve a la primera página. */
+  onBusquedaChange(valor: string): void {
+    this.busqueda.set(valor);
+    this.resetPagina();
+  }
+
+  /** Actualiza el filtro de tipo y vuelve a la primera página. */
+  onTipoChange(valor: 'todos' | 'ingreso' | 'gasto'): void {
+    this.filtroTipo.set(valor);
+    this.resetPagina();
+  }
+
+  /** Actualiza el filtro de fijos y vuelve a la primera página. */
+  onFijoChange(valor: 'todos' | 'fijos' | 'no-fijos'): void {
+    this.filtroFijo.set(valor);
+    this.resetPagina();
+  }
+
+  /** Limpia buscador y filtros. */
+  limpiarFiltros(): void {
+    this.busqueda.set('');
+    this.filtroTipo.set('todos');
+    this.filtroFijo.set('todos');
+    this.resetPagina();
+  }
+
+  private resetPagina(): void {
+    if (this.tabla) {
+      this.tabla.first = 0;
+    }
+  }
+
+  /**
+   * Balance acumulado dentro del periodo del filtro de mes.
+   * Se calcula sobre TODOS los movimientos del periodo, no sobre los
+   * visibles, para que el buscador y los filtros no alteren el balance.
+   */
   balanceAfter(movement: Movimiento): number {
     const index = this.movimientos().findIndex((m) => m._id === movement._id);
     return this.movimientos()

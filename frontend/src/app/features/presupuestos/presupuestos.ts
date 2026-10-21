@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { Categoria, CategoriasService } from '../../services/categorias';
 import { MovimientosStore } from '../../services/movimientos-store';
 import { Presupuesto, PresupuestosService } from '../../services/presupuestos';
+import { AddMovimiento } from '../../shared/modals/add-movimiento/add-movimiento';
 
 /** Presupuesto con los importes ya calculados para el periodo. */
 interface PresupuestoCalculado {
@@ -34,6 +35,7 @@ interface PresupuestoCalculado {
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
+    AddMovimiento
   ],
   templateUrl: './presupuestos.html',
   styleUrl: './presupuestos.scss',
@@ -56,6 +58,7 @@ export class Presupuestos implements OnInit {
 
   readonly cargando = computed(() => this.presCargando() || this.store.cargando());
   readonly error = computed(() => this.presError() || this.store.error());
+  showModalAddMovement = false;
 
   /** Suma de los ingresos del periodo seleccionado. */
   readonly totalIngresos = computed(() =>
@@ -268,5 +271,15 @@ export class Presupuestos implements OnInit {
       default:
         return '#6B7280';
     }
+  }
+
+
+
+hacerTraspaso(): void {    
+    this.showModalAddMovement = true;
+  }
+
+  returnCloseModal(): void {    
+    this.showModalAddMovement = false ;
   }
 }
