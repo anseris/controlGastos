@@ -75,6 +75,44 @@
   color: #c34b5a;
 }
 
+/* --- Umbral de traspaso (cabecera) --- */
+
+.head-acciones {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dia-traspaso {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dia-traspaso label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #788398;
+}
+
+.dia-traspaso small {
+  max-width: 250px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #97a1b3;
+}
+
+.dia-select {
+  width: 110px;
+}
+
 /* --- Cards --- */
 
 .presupuestos-grid {
@@ -228,6 +266,34 @@
   color: #97a1b3;
 }
 
+/* --- Traspaso del sobrante a las cuentas de ahorro --- */
+
+.card-traspaso {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line, #e2e6ee);
+}
+
+.traspaso-cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.traspaso-cuenta label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #788398;
+}
+
+.traspaso-hint {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #97a1b3;
+}
+
 /* --- Total pendiente --- */
 
 .total-pendiente {
@@ -240,6 +306,12 @@
   background: linear-gradient(135deg, #eef4ff 0%, #f7f9fc 100%);
   border: 1px solid #dbe5f7;
   border-radius: 16px;
+}
+
+.total-acciones {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .total-pendiente.negative-total {
@@ -331,3 +403,90 @@
   flex-direction: column;
   gap: 16px;
 }
+
+/* --- Diálogo de traspaso --- */
+
+.traspaso-filas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.traspaso-fila {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f7f9fc;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 12px;
+}
+
+.fila-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fila-cabecera strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.fila-cabecera small {
+  font-size: 11px;
+  color: #788398;
+  white-space: nowrap;
+}
+
+.fila-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.traspaso-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #eef4ff;
+  border: 1px solid #dbe5f7;
+  border-radius: 12px;
+}
+
+.traspaso-total span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #536078;
+}
+
+.traspaso-total strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.traspaso-fila .field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--red, #c34b5a);
+}
+
+.traspaso-fila .field-error i {
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .fila-campos {
+    grid-template-columns: 1fr;
+  }
+}
+

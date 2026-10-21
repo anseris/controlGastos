@@ -60,6 +60,8 @@ const COLORES: { label: string; value: string }[] = [
   { label: 'Marrón', value: '#A16207' },
   { label: 'Gris', value: '#6B7280' },
   { label: 'Negro', value: '#1F2937' },
+  { label: 'Azul Marino', value: '#3b5e97' },
+  { label: 'Salmon', value: '#f198bd' },
 ];
 
 /** Tipos de categoría. El orden pone "Gasto" primero y es el valor por defecto. */

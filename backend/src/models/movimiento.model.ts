@@ -12,6 +12,12 @@ export interface IMovimiento {
   gasto: number;
   tipo: string;
   esFijo: boolean;
+  /**
+   * Clave del presupuesto de origen (`casa` | `ahorro` | `para-mi`).
+   * Solo se rellena en los traspasos de sobrante a cuentas de ahorro: permite
+   * descontar el importe traspasado del pendiente de su presupuesto.
+   */
+  presupuestoClave: string;
 }
 
 /** Normaliza cualquier fecha (Date, ISO, Date.now) a `aaaa-mm-dd`. */
@@ -54,7 +60,12 @@ const movimientoSchema = new Schema<IMovimiento>(
       type: String,
       // enum: ['ing', 'revolut', 'prestamo', ''],
       trim: true
-    },   
+    },
+    presupuestoClave: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     ingreso: {
       type: Number,
       required: true,

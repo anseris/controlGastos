@@ -11,9 +11,32 @@
         <strong>{{ totalIngresos() | currency: 'EUR' }}</strong>
       </p>
     </div>
-    <span class="total-pct" [class.over]="totalPorcentaje() > 100">
-      Total asignado: {{ totalPorcentaje() | number: '1.0-1' }}%
-    </span>
+    <div class="head-acciones">
+      <div class="dia-traspaso">
+        <label for="diaTransferencia">
+          <i class="pi pi-calendar"></i>
+          Traspaso a partir del día
+        </label>
+        <p-select
+          inputId="diaTransferencia"
+          [options]="diasOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="diaTransferencia()"
+          (ngModelChange)="diaTransferencia.set($event)"
+          (onChange)="guardarDiaTransferencia($event.value)"
+          [disabled]="guardandoDia()"
+          appendTo="body"
+          styleClass="dia-select"
+        ></p-select>
+        <small>
+          A partir de ese día puedes mover el sobrante de cada card a tus cuentas de ahorro.
+        </small>
+      </div>
+      <span class="total-pct" [class.over]="totalPorcentaje() > 100">
+        Total asignado: {{ totalPorcentaje() | number: '1.0-1' }}%
+      </span>
+    </div>
   </div>
 
   @if (presupuestos().length === 0) {
@@ -68,6 +91,14 @@
                 {{ item.importeGastado | currency: 'EUR' }}
               </span>
             </div>
+            @if (item.importeTraspasado > 0) {
+              <div class="monto">
+                <span class="monto-label">Traspasado</span>
+                <span class="monto-valor expense-text">
+                  {{ item.importeTraspasado | currency: 'EUR' }}
+                </span>
+              </div>
+            }
             <div class="monto">
               <span class="monto-label">Pendiente</span>
               <span
@@ -91,6 +122,40 @@
             {{ porcentajeGastado(item) | number: '1.0-0' }}% del asignado consumido ·
             pulsa para ver movimientos
           </small>
+
+          <!-- Traspaso del sobrante a una cuenta de ahorro -->
+          <footer class="card-traspaso" (click)="$event.stopPropagation()">
+            <div class="traspaso-cuenta">
+              <label [for]="'cuenta-' + item.presupuesto.clave">Cuenta de ahorro destino</label>
+              <p-select
+                [inputId]="'cuenta-' + item.presupuesto.clave"
+                [options]="cuentasAhorroOptions()"
+                optionLabel="label"
+                optionValue="value"
+                [ngModel]="item.presupuesto.cuentaTransferencia"
+                (ngModelChange)="seleccionarCuenta(item.presupuesto, $event)"
+                placeholder="Elige cuenta"
+                [disabled]="!cuentasAhorro().length"
+                appendTo="body"
+                styleClass="full-width"
+              ></p-select>
+            </div>
+
+            <p-button
+              label="Traspasar"
+              icon="pi pi-arrow-right"
+              [disabled]="!puedeTraspasar(item)"
+              (onClick)="abrirTraspaso(item.presupuesto)"
+            ></p-button>
+
+            @if (motivoBloqueo(item); as motivo) {
+              <small class="traspaso-hint">{{ motivo }}</small>
+            } @else if (!item.presupuesto.cuentaTransferencia) {
+              <small class="traspaso-hint">
+                Sin cuenta de destino: se elegirá al confirmar el traspaso.
+              </small>
+            }
+          </footer>
         </article>
       }
     </div>
@@ -102,10 +167,20 @@
         <small>
           Asignado {{ totalAsignado() | currency: 'EUR' }} · Gastado
           {{ totalGastado() | currency: 'EUR' }}
+          @if (totalTraspasado() > 0) {
+            · Traspasado {{ totalTraspasado() | currency: 'EUR' }}
+          }
         </small>
       </div>
-      <span class="total-valor">{{ totalPendiente() | currency: 'EUR' }}</span>
-      <p-button label="Nuevo movimiento" icon="pi pi-plus" (onClick)="hacerTraspaso()" ></p-button>
+      <div class="total-acciones">
+        <span class="total-valor">{{ totalPendiente() | currency: 'EUR' }}</span>
+        <p-button
+          label="Traspasar todo"
+          icon="pi pi-arrow-right"
+          [disabled]="!puedeTraspasarTodo()"
+          (onClick)="abrirTraspasoTodo()"
+        ></p-button>
+      </div>
     </section>
 
     <!-- Detalle de los movimientos del presupuesto clicado -->
@@ -244,6 +319,120 @@
   </form>
 </p-dialog>
 
-@if (showModalAddMovement) {
-    <app-add-movimiento [showModalAddMovement]="showModalAddMovement" [esTraspaso]="true"  (modalClosed)="returnCloseModal()"></app-add-movimiento>
-  }
+<!-- Diálogo de traspaso: permite elegir importe y cuenta de ahorro destino -->
+<p-dialog
+  [(visible)]="showTraspaso"
+  [modal]="true"
+  (onHide)="cerrarTraspaso()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(560px, 94vw)' }"
+  header="Traspasar sobrante a ahorro"
+  styleClass="movement-dialog"
+>
+  <form class="movement-form" (ngSubmit)="confirmarTraspaso()">
+    <div class="traspaso-filas">
+      @for (fila of filasTraspaso(); track fila.presupuesto.clave) {
+        <div class="traspaso-fila">
+          <div class="fila-cabecera">
+            <strong>{{ fila.presupuesto.nombre }}</strong>
+            <small>Disponible: {{ fila.disponible | currency: 'EUR' }}</small>
+          </div>
+
+          <div class="fila-campos">
+            <div class="form-field">
+              <label [for]="'importe-' + fila.presupuesto.clave">Importe (€) *</label>
+              <p-inputNumber
+                [inputId]="'importe-' + fila.presupuesto.clave"
+                [name]="'importe-' + fila.presupuesto.clave"
+                [ngModel]="fila.importe"
+                (ngModelChange)="actualizarImporte(fila.presupuesto.clave, $event)"
+                mode="currency"
+                currency="EUR"
+                locale="es-ES"
+                [min]="0"
+                [max]="fila.disponible"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                placeholder="0,00"
+                styleClass="full-width"
+              ></p-inputNumber>
+            </div>
+
+            <div class="form-field">
+              <label [for]="'cuenta-traspaso-' + fila.presupuesto.clave">
+                Cuenta de ahorro destino *
+              </label>
+              <p-select
+                [inputId]="'cuenta-traspaso-' + fila.presupuesto.clave"
+                [name]="'cuenta-traspaso-' + fila.presupuesto.clave"
+                [options]="cuentasAhorroOptions()"
+                optionLabel="label"
+                optionValue="value"
+                [ngModel]="fila.cuenta"
+                (ngModelChange)="actualizarCuenta(fila.presupuesto.clave, $event)"
+                placeholder="Elige cuenta"
+                appendTo="body"
+                styleClass="full-width"
+              ></p-select>
+            </div>
+          </div>
+
+          @if (multiplicadorDe(fila.cuenta) > 1) {
+            <small class="form-hint">
+              Multiplicador ×{{ multiplicadorDe(fila.cuenta) }}: el saldo de esta cuenta
+              sumará
+              {{ (fila.importe || 0) * multiplicadorDe(fila.cuenta) | currency: 'EUR' }}.
+            </small>
+          } @else if (!fila.cuenta) {
+            <small class="field-error">
+              <i class="pi pi-exclamation-circle"></i>
+              Elige la cuenta de ahorro de destino para «{{ fila.presupuesto.nombre }}».
+            </small>
+          }
+        </div>
+      }
+    </div>
+
+    @if (filasTraspaso().length > 1) {
+      <p-button
+        label="Rellenar con todo el pendiente"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        type="button"
+        (onClick)="rellenarConPendiente()"
+      ></p-button>
+    }
+
+    <div class="traspaso-total">
+      <span>Total a traspasar</span>
+      <strong>{{ totalTraspaso() | currency: 'EUR' }}</strong>
+    </div>
+
+    @if (saldoTraspaso() !== totalTraspaso()) {
+      <small class="form-hint">
+        El saldo de tus cuentas de ahorro subirá {{ saldoTraspaso() | currency: 'EUR' }}.
+      </small>
+    }
+
+    <div class="dialog-actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="cerrarTraspaso()"
+      ></p-button>
+      <p-button
+        label="Traspasar"
+        icon="pi pi-check"
+        type="submit"
+        [loading]="transferiendo()"
+        [disabled]="!traspasoValido() || transferiendo()"
+      ></p-button>
+    </div>
+  </form>
+</p-dialog>
+

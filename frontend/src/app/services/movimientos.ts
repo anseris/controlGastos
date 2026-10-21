@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 /** Base de la API del backend (Express en el puerto 3000). */
-const API_BASE = 'http://localhost:3000/api';
-// const API_BASE = 'https://controlgastos-8fb2.onrender.com/api';
+// const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://controlgastos-8fb2.onrender.com/api';
 
 /** Valores admitidos por el enum `tipo` del modelo Mongoose. */
 export type TipoMovimiento = 'ingreso' | 'gasto';
@@ -22,6 +22,11 @@ export interface Movimiento {
   gasto: number;
   tipo: string;
   esFijo: boolean;
+  /**
+   * Clave del presupuesto de origen ('casa' | 'ahorro' | 'para-mi').
+   * Solo la tienen los traspasos de sobrante a cuentas de ahorro.
+   */
+  presupuestoClave?: string;
 }
 
 /**
@@ -39,6 +44,8 @@ export interface CrearMovimiento {
   fecha?: string;
   descripcion?: string;
   esFijo?: boolean;
+  /** Clave del presupuesto de origen (traspaso de sobrante a ahorro). */
+  presupuestoClave?: string;
 }
 
 /** Cuerpo para modificar un movimiento (PUT): todos los campos son opcionales. */
