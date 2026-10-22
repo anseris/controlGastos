@@ -23,9 +23,9 @@
           "options": {
             "browser": "src/main.ts",
             "index": {
-  "input": "src/index.html",
-  "output": "index.html"
-},
+              "input": "src/index.html",
+              "output": "index.html"
+            },
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
