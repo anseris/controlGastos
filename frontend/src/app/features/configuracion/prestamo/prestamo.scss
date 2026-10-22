@@ -1,0 +1,258 @@
+.prestamo-cuadro {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- Cabecera --- */
+
+.cuadro-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cuadro-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.cuadro-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #788398;
+}
+
+.cuadro-acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.archivo-oculto {
+  display: none;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fdf3e7;
+  border: 1px solid #f3d9b7;
+  border-radius: 10px;
+  color: #9a5b13;
+  font-size: 12px;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 26px;
+  color: var(--muted, #788398);
+  font-size: 12px;
+}
+
+.empty-state strong {
+  color: #26334b;
+  font-size: 13px;
+}
+
+.empty-state i {
+  font-size: 22px;
+  color: #b6bdcb;
+}
+
+/* --- Datos del préstamo --- */
+
+.datos-cuadro {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(29, 41, 57, 0.04);
+}
+
+.dato span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #97a1b3;
+}
+
+.dato strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.dato strong.fechas {
+  font-size: 14px;
+}
+
+.dato small {
+  font-size: 11px;
+  color: #788398;
+}
+
+/* --- Gasto fijo de la cuota --- */
+
+.gasto-fijo-cuota {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 16px;
+  box-shadow: 0 3px 14px rgba(29, 41, 57, 0.04);
+}
+
+.gasto-fijo-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.gasto-fijo-head p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #788398;
+  max-width: 760px;
+}
+
+.gasto-fijo-cuerpo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+  align-items: end;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #97a1b3;
+}
+
+.gasto-fijo-valor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: #f6f8fc;
+  border-radius: 10px;
+  min-height: 44px;
+}
+
+.gasto-fijo-valor strong {
+  font-size: 14px;
+  color: #26334b;
+}
+
+.gasto-fijo-valor small {
+  font-size: 11px;
+  color: #788398;
+}
+
+.gasto-fijo-valor small.desfase {
+  color: #9a5b13;
+}
+
+.acciones-cuota {
+  justify-content: flex-end;
+}
+
+/* --- Tabla del cuadro --- */
+
+.tabla-cuadro {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 16px;
+  box-shadow: 0 3px 14px rgba(29, 41, 57, 0.04);
+}
+
+.tabla-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.tabla-head small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #788398;
+}
+
+.col-mes {
+  width: 70px;
+}
+
+.col-fecha {
+  width: 120px;
+}
+
+.col-importe {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.col-estado {
+  width: 130px;
+  text-align: center;
+}
+
+.col-estado .extra {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: #788398;
+}
+
+/* Fila ya amortizada: se resalta con otro color. */
+.cuadro-amortizacion .fila-pagada {
+  background: #ecfdf5;
+}
+
+.cuadro-amortizacion .fila-pagada:hover {
+  background: #d1fae5 !important;
+}
+
+.cuadro-amortizacion .fila-pagada td {
+  color: #166534;
+}
+
+.cuadro-amortizacion .fila-parcial {
+  background: #fffbeb;
+}
+
+.cuadro-amortizacion .fila-parcial:hover {
+  background: #fef3c7 !important;
+}

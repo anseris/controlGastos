@@ -14,8 +14,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { Categoria, CategoriasService } from '../../../services/categorias';
+import { BancosService, CuentaBanco } from '../../../services/bancos';
 import {
   DatosGastoFijo,
   GastoFijo,
@@ -36,11 +38,21 @@ type FormGastoFijo = {
   descripcion: string;
   categoria: string;
   importe: number | null;
+  tipoAhorro: string;
+  esCuotaPrestamo: boolean;
 };
 
 @Component({
   selector: 'app-add-gasto-fijo',
-  imports: [DialogModule, FormsModule, InputTextModule, InputNumberModule, SelectModule, ButtonModule],
+  imports: [
+    DialogModule,
+    FormsModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
+    ButtonModule,
+    CheckboxModule,
+  ],
   templateUrl: './add-gasto-fijo.html',
   styleUrl: './add-gasto-fijo.scss',
 })
@@ -56,12 +68,16 @@ export class AddGastoFijo implements OnChanges {
 
   private readonly gastosFijosService = inject(GastosFijosService);
   private readonly categoriasService = inject(CategoriasService);
+  private readonly bancosService = inject(BancosService);
   private readonly messages = inject(MessageService);
 
   readonly diasOptions = DIAS;
 
   /** Categorías de tipo gasto (las que puede usar un gasto fijo). */
   readonly categoriasOptions = signal<Categoria[]>([]);
+
+  /** Cuentas de "Mis bancos" a las que se puede imputar el movimiento. */
+  readonly cuentasOptions = signal<CuentaBanco[]>([]);
 
   submitted = false;
   guardando = false;
@@ -75,6 +91,7 @@ export class AddGastoFijo implements OnChanges {
 
   constructor() {
     this.cargarCategorias();
+    this.cargarCuentas();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -96,12 +113,22 @@ export class AddGastoFijo implements OnChanges {
     });
   }
 
+  /** Carga las cuentas de "Mis bancos" (se guardan en la BBDD). */
+  private cargarCuentas(): void {
+    this.bancosService.cargar().subscribe({
+      next: (cuentas) => this.cuentasOptions.set(cuentas),
+      error: (err) => console.error('Error al cargar las cuentas:', err),
+    });
+  }
+
   private emptyForm(): FormGastoFijo {
     return {
       dia: 1,
       descripcion: '',
       categoria: '',
       importe: null,
+      tipoAhorro: '',
+      esCuotaPrestamo: false,
     };
   }
 
@@ -120,6 +147,8 @@ export class AddGastoFijo implements OnChanges {
       descripcion: gastoFijo.descripcion ?? '',
       categoria: gastoFijo.categoria ?? '',
       importe: gastoFijo.importe ?? null,
+      tipoAhorro: gastoFijo.tipoAhorro ?? '',
+      esCuotaPrestamo: !!gastoFijo.esCuotaPrestamo,
     };
   }
 
@@ -147,6 +176,9 @@ export class AddGastoFijo implements OnChanges {
       // El tipo de movimiento siempre es gasto.
       tipo: 'gasto',
       activo: true,
+      // Cuenta de "Mis bancos" a la que se imputa el movimiento (p. ej. el préstamo).
+      tipoAhorro: this.form.tipoAhorro,
+      esCuotaPrestamo: this.form.esCuotaPrestamo,
     };
 
     this.guardando = true;

@@ -13,6 +13,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Movimiento } from '../../services/movimientos';
 import { MovimientosStore, mesLabel } from '../../services/movimientos-store';
 import { BancosService, CuentaBanco, TipoCuentaBanco } from '../../services/bancos';
+import {
+  AmortizacionPrestamoService,
+  calcularEstadoPrestamo,
+} from '../../services/amortizacion-prestamo';
 
 /** Cuenta con los importes ya calculados para el periodo. */
 interface CuentaCalculada {
@@ -27,6 +31,16 @@ interface CuentaCalculada {
   disponible: number;
   /** % del préstamo utilizado. */
   porcentajePrestamo: number;
+  /** Total del préstamo (capital inicial del cuadro de amortización). */
+  totalPrestamo?: number;
+  /** Parte de la cuota del mes que amortiza capital. */
+  cuotaCapital?: number;
+  /** Parte de la cuota del mes que son intereses. */
+  cuotaInteres?: number;
+  /** Cuotas ya pagadas del cuadro. */
+  cuotasPagadas?: number;
+  /** Número total de cuotas del cuadro. */
+  totalCuotas?: number;
 }
 
 /** Colores disponibles para las cuentas. */
@@ -94,6 +108,7 @@ export class MisBancos implements OnInit {
   private readonly bancos = inject(BancosService);
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
+  private readonly amortizacion = inject(AmortizacionPrestamoService);
 
   readonly cargando = computed(
     () => this.store.cargando() || this.bancos.cargando()
@@ -144,9 +159,52 @@ export class MisBancos implements OnInit {
     const sumas = this.sumas();
     const sumasMes = this.sumasMes();
 
+    // Datos del cuadro de amortización del préstamo (tabla `amortizacion_prestamo`).
+    const cuotas = this.amortizacion.cuotas();
+    const datos = this.amortizacion.datos();
+    const movimientos = this.movimientosTodos();
+
     return this.cuentas().map((cuenta) => {
       const factor = cuenta.multiplicador || 1;
       const prestado = sumas[cuenta.id] ?? 0;
+
+      if (cuenta.tipo === 'prestamo') {
+        // En el préstamo solo descuenta el capital amortizado de las cuotas
+        // (no los intereses) y los traspasos que se hacen a la cuenta.
+        const resumen = calcularEstadoPrestamo(cuotas, datos, movimientos, cuenta.id)
+          .resumen;
+
+        if (resumen) {
+          return {
+            cuenta,
+            // Lo que queda por devolver del préstamo.
+            saldoActual: resumen.capitalPendiente,
+            variacionMes: resumen.cuotaActual?.cuota ?? 0,
+            prestado: resumen.amortizado,
+            disponible: resumen.capitalPendiente,
+            porcentajePrestamo: resumen.porcentaje,
+            totalPrestamo: resumen.capitalInicial,
+            cuotaCapital: resumen.cuotaActual?.amortizacionCapital ?? 0,
+            cuotaInteres: resumen.cuotaActual?.interesPagado ?? 0,
+            cuotasPagadas: resumen.cuotasPagadas,
+            totalCuotas: resumen.totalCuotas,
+          };
+        }
+
+        // Sin cuadro de amortización importado: se usa el total de la cuenta.
+        return {
+          cuenta,
+          saldoActual: cuenta.saldoOrigen - prestado,
+          variacionMes: factor * (sumasMes[cuenta.id] ?? 0),
+          prestado,
+          disponible: cuenta.saldoOrigen - prestado,
+          porcentajePrestamo:
+            cuenta.saldoOrigen > 0
+              ? Math.min(100, (prestado / cuenta.saldoOrigen) * 100)
+              : 0,
+          totalPrestamo: cuenta.saldoOrigen,
+        };
+      }
 
       return {
         cuenta,
@@ -196,6 +254,7 @@ export class MisBancos implements OnInit {
   ngOnInit(): void {
     this.store.cargar().subscribe();
     this.bancos.cargar().subscribe();
+    this.amortizacion.cargar().subscribe();
   }
 
   /** La categoría de ahorro se guarda como 'Ahorro' (se compara sin distinguir mayúsculas). */

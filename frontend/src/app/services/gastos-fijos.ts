@@ -24,6 +24,16 @@ export interface GastoFijo {
   tipo: string;
   /** Si está activo, el generador crea el movimiento cada mes. */
   activo: boolean;
+  /**
+   * Clave de la cuenta de "Mis bancos" a la que se imputa el movimiento
+   * (p. ej. 'prestamo'). Cadena vacía = movimiento sin cuenta.
+   */
+  tipoAhorro: string;
+  /**
+   * Marca el gasto fijo como la cuota de un préstamo: su importe se sincroniza
+   * con la columna "Cuota" del cuadro de amortización.
+   */
+  esCuotaPrestamo: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -36,6 +46,10 @@ export interface DatosGastoFijo {
   importe: number;
   tipo?: string;
   activo?: boolean;
+  /** Cuenta de "Mis bancos" a la que se imputa el movimiento. */
+  tipoAhorro?: string;
+  /** Es la cuota de un préstamo (su importe se sincroniza con el cuadro). */
+  esCuotaPrestamo?: boolean;
 }
 
 /** Respuesta genérica del backend para mensajes. */

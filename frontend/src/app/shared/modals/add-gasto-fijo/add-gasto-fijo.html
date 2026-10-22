@@ -90,6 +90,42 @@
       </div>
     </div>
 
+    <!-- Cuenta de "Mis bancos" -->
+    <div class="form-field">
+      <label for="gastoFijoCuenta">Cuenta de Mis bancos</label>
+      <p-select
+        inputId="gastoFijoCuenta"
+        name="tipoAhorro"
+        [options]="cuentasOptions()"
+        optionLabel="nombre"
+        optionValue="id"
+        [(ngModel)]="form.tipoAhorro"
+        [showClear]="true"
+        appendTo="body"
+        placeholder="Sin cuenta"
+        styleClass="full-width"
+      ></p-select>
+      <small class="field-hint">
+        El movimiento se imputará a esta cuenta. En el caso del préstamo, así
+        "Mis bancos" sabe qué parte de la cuota amortiza capital.
+      </small>
+    </div>
+
+    <div class="form-field">
+      <p-checkbox
+        inputId="gastoFijoCuotaPrestamo"
+        name="esCuotaPrestamo"
+        [binary]="true"
+        [(ngModel)]="form.esCuotaPrestamo"
+      ></p-checkbox>
+      <label for="gastoFijoCuotaPrestamo" class="checkbox-label">
+        Es la cuota de un préstamo
+      </label>
+      <small class="field-hint">
+        Su importe se sincroniza con la columna "Cuota" del cuadro de amortización.
+      </small>
+    </div>
+
     <div class="form-hint">
       <i class="pi pi-info-circle"></i>
       El tipo de movimiento siempre será <strong>gasto</strong>. El movimiento se genera

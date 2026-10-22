@@ -1,1 +1,255 @@
-<p>prestamo works!</p>
+<section class="prestamo-cuadro">
+  <!-- Cabecera -->
+  <header class="cuadro-head">
+    <div class="cuadro-head-info">
+      <h2>{{ datos()?.descripcion || 'Préstamo' }}</h2>
+      <p>
+        @if (datos(); as info) {
+          <span>Cuenta {{ info.cuenta }}</span>
+          @if (info.periodo) {
+            <span> · Periodo {{ info.periodo }}</span>
+          }
+        } @else {
+          <span>Importa el archivo CuadroDeAmortizacion.XLS para ver el cuadro.</span>
+        }
+      </p>
+    </div>
+
+    <div class="cuadro-acciones">
+      <input
+        #archivoInput
+        type="file"
+        accept=".xls,.xlsx"
+        class="archivo-oculto"
+        (change)="onArchivoSeleccionado($event)"
+      />
+      <p-button
+        label="Importar desde Excel"
+        icon="pi pi-upload"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="importando()"
+        (onClick)="archivoInput.click()"
+      ></p-button>
+      <p-button
+        label="Usar archivo del proyecto"
+        icon="pi pi-file"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="importando()"
+        (onClick)="importarDelProyecto()"
+      ></p-button>
+      <p-button
+        label="Sincronizar cuota"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="sincronizando()"
+        [disabled]="!cuotas().length"
+        (onClick)="sincronizarCuota()"
+      ></p-button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="aviso">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  @if (cargando()) {
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i> Cargando cuadro de amortización...
+    </div>
+  } @else if (cuotas().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox"></i>
+      <strong>Sin cuadro de amortización</strong>
+      <span>
+        Importa el archivo <code>CuadroDeAmortizacion.XLS</code> para tener las cuotas
+        en la BBDD.
+      </span>
+    </div>
+  } @else {
+    <!-- Datos del préstamo -->
+    <div class="datos-cuadro">
+      <div class="dato">
+        <span>Capital inicial</span>
+        <strong>{{ (datos()?.capitalInicial ?? 0) | currency: 'EUR' }}</strong>
+      </div>
+      <div class="dato">
+        <span>Capital pendiente</span>
+        <strong>{{ (resumen()?.capitalPendiente ?? 0) | currency: 'EUR' }}</strong>
+      </div>
+      <div class="dato">
+        <span>Cuota del mes</span>
+        <strong>{{ (resumen()?.cuotaActual?.cuota ?? 0) | currency: 'EUR' }}</strong>
+        @if (resumen()?.cuotaActual; as cuota) {
+          <small>
+            {{ cuota.amortizacionCapital | currency: 'EUR' }} de capital ·
+            {{ cuota.interesPagado | currency: 'EUR' }} de interés
+          </small>
+        }
+      </div>
+      <div class="dato">
+        <span>Cuotas pagadas</span>
+        <strong>
+          {{ resumen()?.cuotasPagadas ?? 0 }} / {{ resumen()?.totalCuotas ?? 0 }}
+        </strong>
+        <small>Amortizado: {{ (resumen()?.amortizadoPeriodo ?? 0) | currency: 'EUR' }}</small>
+      </div>
+      @if (datos(); as info) {
+        <div class="dato">
+          <span>Firma / Fin</span>
+          <strong class="fechas">
+            {{ info.fechaFirma | date: 'dd/MM/yyyy' }} - {{ info.fechaFin | date: 'dd/MM/yyyy' }}
+          </strong>
+        </div>
+      }
+    </div>
+
+    <!-- Gasto fijo de la cuota -->
+    <section class="gasto-fijo-cuota">
+      <div class="gasto-fijo-head">
+        <div>
+          <h3>Gasto fijo de la cuota</h3>
+          <p>
+            El importe del gasto fijo se toma de la columna <strong>Cuota</strong> del
+            cuadro. El movimiento se imputa a la cuenta del préstamo, de modo que en
+            "Mis bancos" solo se descuenta la <strong>amortización de capital</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="gasto-fijo-cuerpo">
+        <div class="campo">
+          <label for="prestamoCuenta">Cuenta del préstamo</label>
+          <p-select
+            inputId="prestamoCuenta"
+            name="cuentaPrestamo"
+            [options]="opcionesCuenta()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="cuentaPrestamo()?.id"
+            (ngModelChange)="cuentaSeleccionada.set($event)"
+            [disabled]="!opcionesCuenta().length"
+            appendTo="body"
+            styleClass="full-width"
+          ></p-select>
+        </div>
+
+        <div class="campo">
+          <label for="prestamoCuota">Cuota del cuadro</label>
+          <p-select
+            inputId="prestamoCuota"
+            name="cuotaSeleccionada"
+            [options]="opcionesCuota()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="cuotaActualSeleccionada()?.fecha"
+            (ngModelChange)="cuotaSeleccionada.set($event)"
+            appendTo="body"
+            styleClass="full-width"
+          ></p-select>
+        </div>
+
+        <div class="campo">
+          <label>Gasto fijo</label>
+          <div class="gasto-fijo-valor">
+            @if (gastoFijoCuota(); as gasto) {
+              <strong>{{ gasto.descripcion }}</strong>
+              <small>
+                Día {{ gasto.dia }} · {{ gasto.categoria }} ·
+                {{ gasto.importe | currency: 'EUR' }}
+              </small>
+              @if (!gasto.tipoAhorro) {
+                <small class="desfase">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  No tiene cuenta asignada: "Mis bancos" no descontará el capital
+                  amortizado.
+                </small>
+              }
+              @if (importeDesfasado(); as desfasado) {
+                <small class="desfase">
+                  <i class="pi pi-info-circle"></i>
+                  El importe no coincide con la cuota
+                  ({{ desfasado | currency: 'EUR' }}).
+                </small>
+              }
+            } @else {
+              <strong>Sin crear</strong>
+              <small>Se creará con la cuota seleccionada.</small>
+            }
+          </div>
+        </div>
+
+        <div class="campo acciones-cuota">
+          <p-button
+            [label]="gastoFijoCuota() ? 'Actualizar gasto fijo' : 'Crear gasto fijo'"
+            icon="pi pi-check"
+            [disabled]="!cuotaActualSeleccionada()"
+            (onClick)="aplicarCuotaAlGastoFijo()"
+          ></p-button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cuadro de amortización -->
+    <section class="tabla-cuadro">
+      <div class="tabla-head">
+        <h3>Cuadro de amortización</h3>
+        <small>
+          Las filas ya amortizadas se resaltan en verde. Si el Excel cambia por los
+          intereses, vuelve a importarlo para actualizar la tabla.
+        </small>
+      </div>
+
+      <p-table
+        [value]="estados()"
+        [rowHover]="true"
+        styleClass="cuadro-amortizacion"
+        dataKey="cuota._id"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="col-mes">Mes</th>
+            <th class="col-fecha">Fecha</th>
+            <th class="col-importe">Amortización capital (€)</th>
+            <th class="col-importe">Interés pagado (€)</th>
+            <th class="col-importe">Cuota (€)</th>
+            <th class="col-importe">Capital pendiente (€)</th>
+            <th class="col-estado">Estado</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-estado>
+          <tr [class.fila-pagada]="estado.liquidada" [class.fila-parcial]="estado.pagado > 0 && !estado.liquidada">
+            <td class="col-mes">{{ estado.cuota.mes }}</td>
+            <td class="col-fecha">{{ estado.cuota.fecha | date: 'dd/MM/yyyy' }}</td>
+            <td class="col-importe">
+              {{ estado.cuota.amortizacionCapital | currency: 'EUR' }}
+            </td>
+            <td class="col-importe">
+              {{ estado.cuota.interesPagado | currency: 'EUR' }}
+            </td>
+            <td class="col-importe">
+              <strong>{{ estado.cuota.cuota | currency: 'EUR' }}</strong>
+            </td>
+            <td class="col-importe">
+              {{ estado.cuota.capitalPendiente | currency: 'EUR' }}
+            </td>
+            <td class="col-estado">
+              <p-tag
+                [value]="etiquetaEstado(estado)"
+                [severity]="severidadEstado(estado)"
+              ></p-tag>
+              @if (estado.extra > 0) {
+                <small class="extra">+{{ estado.extra | currency: 'EUR' }} extra</small>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+</section>

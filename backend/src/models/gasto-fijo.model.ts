@@ -8,6 +8,16 @@ export interface IGastoFijo {
   importe: number;
   tipo: string;
   activo: boolean;
+  /**
+   * Clave de la cuenta de "Mis bancos" a la que se imputa el movimiento
+   * (p. ej. 'prestamo'). Cadena vacía = movimiento sin cuenta.
+   */
+  tipoAhorro: string;
+  /**
+   * Marca el gasto fijo como la cuota de un préstamo: su importe se sincroniza
+   * con la columna "Cuota" del cuadro de amortización.
+   */
+  esCuotaPrestamo: boolean;
 }
 
 const gastoFijoSchema = new Schema<IGastoFijo>(
@@ -43,6 +53,16 @@ const gastoFijoSchema = new Schema<IGastoFijo>(
       type: Boolean,
       required: true,
       default: true,
+    },
+    tipoAhorro: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    esCuotaPrestamo: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
   },
   {

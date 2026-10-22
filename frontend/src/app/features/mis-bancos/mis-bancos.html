@@ -73,24 +73,33 @@
 
         @if (item.cuenta.tipo === 'prestamo') {
           <div class="banco-total">
-            <span class="monto-label">Total estipulado</span>
+            <span class="monto-label">Capital pendiente</span>
             <span class="monto-valor">
-              {{ item.cuenta.saldoOrigen | currency: 'EUR' }}
+              {{ item.disponible | currency: 'EUR' }}
             </span>
+            <small class="origen-hint">
+              Total del préstamo:
+              {{ (item.totalPrestamo ?? item.cuenta.saldoOrigen) | currency: 'EUR' }}
+            </small>
           </div>
 
           <div class="prestamo-rows">
             <div class="prestamo-row">
-              <span>Prestado</span>
-              <strong class="expense-text">{{ item.prestado | currency: 'EUR' }}</strong>
+              <span>Amortizado (capital)</span>
+              <strong>{{ item.prestado | currency: 'EUR' }}</strong>
             </div>
             <div class="prestamo-row">
-              <span>Disponible</span>
-              <strong [class.negative]="item.disponible < 0">
-                {{ item.disponible | currency: 'EUR' }}
-              </strong>
+              <span>Cuota del mes</span>
+              <strong>{{ item.variacionMes | currency: 'EUR' }}</strong>
             </div>
           </div>
+
+          @if (item.cuotaCapital) {
+            <small class="bar-hint">
+              De la cuota: {{ item.cuotaCapital | currency: 'EUR' }} de capital ·
+              {{ item.cuotaInteres | currency: 'EUR' }} de interés
+            </small>
+          }
 
           <div class="budget-bar">
             <span
@@ -100,7 +109,10 @@
             ></span>
           </div>
           <small class="bar-hint">
-            {{ item.porcentajePrestamo | number: '1.0-0' }}% del préstamo utilizado
+            {{ item.porcentajePrestamo | number: '1.0-0' }}% amortizado
+            @if (item.totalCuotas) {
+              · {{ item.cuotasPagadas }}/{{ item.totalCuotas }} cuotas pagadas
+            }
           </small>
         } @else {
           <div class="banco-total">

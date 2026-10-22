@@ -146,10 +146,11 @@ export const generarGastosFijosDelMes = async (
 
   for (const gastoFijo of gastosFijos) {
     // Solo se crea si el gasto fijo no tiene ya un movimiento este mes.
-    const existente = await Movimiento.findOne({
-      gastoFijoId: String(gastoFijo._id),
-      fecha: { $regex: `^${prefijoMes}` },
-    });
+    const existente = await buscarMovimientoDelMes(
+      gastoFijo,
+      prefijoMes,
+      fechaDelGastoFijo(gastoFijo, referencia)
+    );
 
     if (existente) {
       continue;
@@ -163,6 +164,56 @@ export const generarGastosFijosDelMes = async (
 };
 
 /**
+ * Fecha del movimiento de un gasto fijo en el mes de referencia.
+ * El día se ajusta al último día del mes cuando el mes es más corto.
+ */
+const fechaDelGastoFijo = (gastoFijo: IGastoFijo, referencia: Date): string => {
+  const year = referencia.getFullYear();
+  const mes = String(referencia.getMonth() + 1).padStart(2, '0');
+  const ultimoDia = new Date(year, referencia.getMonth() + 1, 0).getDate();
+  const dia = Math.min(gastoFijo.dia, ultimoDia);
+  return `${year}-${mes}-${String(dia).padStart(2, '0')}`;
+};
+
+/**
+ * Busca el movimiento del mes que corresponde a un gasto fijo.
+ *
+ * Primero busca el que tiene su `gastoFijoId`. Si no existe (movimientos
+ * que se crearon a mano antes de que el gasto fijo tuviera cuenta), busca uno
+ * equivalente (misma descripción, fecha e importe) y lo adopta en lugar de
+ * crear un duplicado.
+ */
+const buscarMovimientoDelMes = async (
+  gastoFijo: IGastoFijo,
+  prefijoMes: string,
+  fecha: string
+) => {
+  const porId = await Movimiento.findOne({
+    gastoFijoId: String(gastoFijo._id),
+    fecha: { $regex: `^${prefijoMes}` },
+  });
+
+  if (porId) {
+    return porId;
+  }
+
+  // Movimiento equivalente creado a mano: se queda enlazado al gasto fijo.
+  const equivalente = await Movimiento.findOne({
+    gastoFijoId: '',
+    descripcion: gastoFijo.descripcion,
+    fecha,
+    gasto: gastoFijo.importe,
+  });
+
+  if (equivalente) {
+    equivalente.gastoFijoId = String(gastoFijo._id);
+    await equivalente.save();
+  }
+
+  return equivalente;
+};
+
+/**
  * Crea el movimiento de un gasto fijo para el mes indicado.
  * El día se ajusta al último día del mes cuando el mes es más corto.
  */
@@ -170,17 +221,15 @@ const crearMovimientoDesdeGastoFijo = async (
   gastoFijo: IGastoFijo,
   referencia: Date
 ) => {
-  const year = referencia.getFullYear();
-  const mes = String(referencia.getMonth() + 1).padStart(2, '0');
-  const ultimoDia = new Date(year, referencia.getMonth() + 1, 0).getDate();
-  const dia = Math.min(gastoFijo.dia, ultimoDia);
-  const fecha = `${year}-${mes}-${String(dia).padStart(2, '0')}`;
+  const fecha = fechaDelGastoFijo(gastoFijo, referencia);
 
   return Movimiento.create({
     fecha,
     descripcion: gastoFijo.descripcion,
     categoria: gastoFijo.categoria,
-    tipoAhorro: '',
+    // El movimiento se imputa a la cuenta de "Mis bancos" del gasto fijo
+    // (por ejemplo la cuenta del préstamo).
+    tipoAhorro: gastoFijo.tipoAhorro ?? '',
     ingreso: 0,
     gasto: gastoFijo.importe,
     tipo: 'gasto',
@@ -202,15 +251,9 @@ export const sincronizarMovimientoDelMes = async (
   const year = referencia.getFullYear();
   const mes = String(referencia.getMonth() + 1).padStart(2, '0');
   const prefijoMes = `${year}-${mes}`;
+  const fecha = fechaDelGastoFijo(gastoFijo, referencia);
 
-  const existente = await Movimiento.findOne({
-    gastoFijoId: String(gastoFijo._id),
-    fecha: { $regex: `^${prefijoMes}` },
-  });
-
-  const ultimoDia = new Date(year, referencia.getMonth() + 1, 0).getDate();
-  const dia = Math.min(gastoFijo.dia, ultimoDia);
-  const fecha = `${year}-${mes}-${String(dia).padStart(2, '0')}`;
+  const existente = await buscarMovimientoDelMes(gastoFijo, prefijoMes, fecha);
 
   if (existente) {
     // Si el gasto fijo se ha desactivado, se borra su movimiento del mes.
@@ -222,6 +265,7 @@ export const sincronizarMovimientoDelMes = async (
     existente.fecha = fecha;
     existente.descripcion = gastoFijo.descripcion;
     existente.categoria = gastoFijo.categoria;
+    existente.tipoAhorro = gastoFijo.tipoAhorro ?? '';
     existente.gasto = gastoFijo.importe;
     existente.ingreso = 0;
     existente.tipo = 'gasto';
