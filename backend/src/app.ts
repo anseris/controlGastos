@@ -11,7 +11,7 @@ app.use(cors({
   origin: [
     'http://localhost:4200',
     'https://autumn-snow-61c8.anseris51-2f5.workers.dev',
-    'https://wispy-wood-caf6.anseris51-2f5.workers.dev'
+    'https://control-gastos.anseris51-2f5.workers.dev'
   ]
 }));
 
