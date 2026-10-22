@@ -1,0 +1,168 @@
+.gastos-fijos-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.gastos-fijos-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #26334b;
+}
+
+.gastos-fijos-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #788398;
+}
+
+.head-acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.total-pill {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef1f7;
+  color: #536078;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 26px;
+  font-size: 13px;
+  color: var(--muted, #788398);
+}
+
+.error-state {
+  color: var(--red, #c34b5a);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 26px;
+  color: var(--muted, #788398);
+  font-size: 12px;
+}
+
+.empty-state strong {
+  color: #26334b;
+  font-size: 13px;
+}
+
+.empty-state i {
+  font-size: 22px;
+  color: #b6bdcb;
+}
+
+/* --- Cards --- */
+
+.gastos-fijos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.gasto-fijo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px 16px;
+  background: #fff;
+  border: 1px solid var(--line, #e2e6ee);
+  border-radius: 14px;
+  box-shadow: 0 3px 14px rgba(29, 41, 57, 0.03);
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.gasto-fijo-card:hover {
+  border-color: #d3d9e6;
+  box-shadow: 0 6px 18px rgba(29, 41, 57, 0.08);
+  transform: translateY(-1px);
+}
+
+.card-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+}
+
+.gasto-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.15rem;
+}
+
+.gasto-descripcion {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #26334b;
+  word-break: break-word;
+  padding-right: 52px;
+}
+
+.categoria-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.gasto-montos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 11px 12px;
+  background: #f7f9fc;
+  border-radius: 12px;
+}
+
+.gasto-importe {
+  font-size: 18px;
+  font-weight: 800;
+  color: #c2410c;
+}
+
+.gasto-dia {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #788398;
+}
+
+.gasto-dia i {
+  font-size: 11px;
+  color: #97a1b3;
+}

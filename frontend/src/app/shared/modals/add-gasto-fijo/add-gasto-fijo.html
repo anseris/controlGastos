@@ -1,0 +1,116 @@
+<p-dialog
+  [(visible)]="showModal"
+  [modal]="true"
+  (onHide)="modalClosed.emit()"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(560px, 94vw)' }"
+  [header]="editing ? 'Editar gasto fijo' : 'Nuevo gasto fijo'"
+  styleClass="movement-dialog"
+>
+  <form class="modal-form" (ngSubmit)="saveGastoFijo()">
+    <!-- Día del mes -->
+    <div class="form-field">
+      <label for="gastoFijoDia">Día del mes *</label>
+      <p-select
+        inputId="gastoFijoDia"
+        name="dia"
+        [options]="diasOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.dia"
+        appendTo="body"
+        styleClass="full-width"
+      ></p-select>
+      <small class="field-hint">
+        El movimiento se añadirá automáticamente ese día de cada mes.
+      </small>
+    </div>
+
+    <!-- Descripción -->
+    <div class="form-field">
+      <label for="gastoFijoDescripcion">Descripción *</label>
+      <input
+        id="gastoFijoDescripcion"
+        pInputText
+        name="descripcion"
+        [(ngModel)]="form.descripcion"
+        placeholder="Ej. Alquiler"
+        class="full-width"
+        required
+        maxlength="120"
+        autocomplete="off"
+      />
+      @if (submitted && !form.descripcion.trim()) {
+        <small class="field-error">Introduce una descripción.</small>
+      }
+    </div>
+
+    <div class="form-columns">
+      <!-- Categoría -->
+      <div class="form-field">
+        <label for="gastoFijoCategoria">Categoría *</label>
+        <p-select
+          inputId="gastoFijoCategoria"
+          name="categoria"
+          [options]="categoriasOptions()"
+          optionLabel="nombre"
+          optionValue="nombre"
+          [(ngModel)]="form.categoria"
+          [filter]="true"
+          filterPlaceholder="Buscar categoría"
+          appendTo="body"
+          placeholder="Selecciona una categoría"
+          styleClass="full-width"
+        ></p-select>
+        @if (submitted && !form.categoria.trim()) {
+          <small class="field-error">Elige una categoría.</small>
+        }
+      </div>
+
+      <!-- Importe -->
+      <div class="form-field">
+        <label for="gastoFijoImporte">Importe (€) *</label>
+        <p-inputnumber
+          inputId="gastoFijoImporte"
+          name="importe"
+          [(ngModel)]="form.importe"
+          mode="currency"
+          currency="EUR"
+          locale="es-ES"
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          styleClass="full-width"
+          placeholder="0,00"
+        ></p-inputnumber>
+        @if (submitted && !form.importe) {
+          <small class="field-error">Introduce el importe del gasto.</small>
+        }
+      </div>
+    </div>
+
+    <div class="form-hint">
+      <i class="pi pi-info-circle"></i>
+      El tipo de movimiento siempre será <strong>gasto</strong>. El movimiento se genera
+      automáticamente en la tabla de movimientos el día indicado de cada mes.
+    </div>
+
+    <div class="dialog-actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="closeModal()"
+      ></p-button>
+      <p-button
+        [label]="editing ? 'Guardar cambios' : 'Guardar gasto fijo'"
+        icon="pi pi-check"
+        type="submit"
+        [loading]="guardando"
+        [disabled]="guardando"
+      ></p-button>
+    </div>
+  </form>
+</p-dialog>

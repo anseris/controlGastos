@@ -1,0 +1,110 @@
+<div class="gastos-fijos-head">
+  <div>
+    <h2>Gastos fijos</h2>
+    <p>
+      Se añaden automáticamente a tus movimientos el día que indiques de cada mes.
+    </p>
+  </div>
+  <div class="head-acciones">
+    <span class="total-pill">
+      {{ totalActivos() }} activos · {{ totalMensual() | currency: 'EUR' }}/mes
+    </span>
+    <p-button
+      label="Generar ahora"
+      icon="pi pi-refresh"
+      [outlined]="true"
+      severity="secondary"
+      [loading]="generando()"
+      (onClick)="generarMovimientos()"
+    ></p-button>
+    <p-button
+      label="Añadir gasto fijo"
+      icon="pi pi-plus"
+      (onClick)="anadirGastoFijo()"
+    ></p-button>
+  </div>
+</div>
+
+@if (cargando()) {
+  <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando gastos fijos…</div>
+} @else if (error()) {
+  <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+} @else if (gastosFijos().length === 0) {
+  <div class="empty-state">
+    <i class="pi pi-inbox"></i>
+    <strong>No hay gastos fijos</strong>
+    <span>Añade uno y se generará solo cada mes en tus movimientos.</span>
+  </div>
+} @else {
+  <div class="gastos-fijos-grid">
+    @for (gasto of gastosFijos(); track gasto._id) {
+      @let categoria = categoriaDe(gasto.categoria);
+      <article class="gasto-fijo-card">
+        <div class="card-actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            ariaLabel="Editar gasto fijo"
+            (onClick)="editarGastoFijo(gasto)"
+          ></p-button>
+          <p-button
+            icon="pi pi-trash"
+            [text]="true"
+            [rounded]="true"
+            severity="danger"
+            ariaLabel="Eliminar gasto fijo"
+            (onClick)="eliminarGastoFijo(gasto)"
+          ></p-button>
+        </div>
+
+        <span
+          class="gasto-icon"
+          [style.backgroundColor]="categoria?.color || '#9ca3af'"
+        >
+          @if (categoria?.icono && categoria?.hasIcono) {
+            <i [class]="categoria?.icono"></i>
+          } @else {
+            <i>{{ gasto.categoria.charAt(0) || '?' }}</i>
+          }
+        </span>
+
+        <h3 class="gasto-descripcion">{{ gasto.descripcion }}</h3>
+
+        <span
+          class="categoria-tag"
+          [style.backgroundColor]="categoria?.color || '#9ca3af'"
+          [style.color]="colorTexto(categoria?.color)"
+        >
+          {{ gasto.categoria }}
+        </span>
+
+        <div class="gasto-montos">
+          <span class="gasto-importe">{{ gasto.importe | currency: 'EUR' }}</span>
+          <span class="gasto-dia">
+            <i class="pi pi-calendar"></i>
+            Día {{ gasto.dia }} de cada mes
+          </span>
+        </div>
+
+        <p-tag
+          [value]="gasto.activo ? 'Activo' : 'Inactivo'"
+          [severity]="gasto.activo ? 'success' : 'secondary'"
+          [rounded]="true"
+        ></p-tag>
+      </article>
+    }
+  </div>
+}
+
+@if (showModal()) {
+  <app-add-gasto-fijo
+    [showModal]="showModal()"
+    [gastoFijo]="gastoFijoEditando()"
+    (saved)="onSaved()"
+    (modalClosed)="returnCloseModal()"
+  ></app-add-gasto-fijo>
+}
+
+<p-confirmDialog key="gastos-fijos"></p-confirmDialog>

@@ -6,13 +6,22 @@
     </p-tab>
     <p-tab value="tab2" class="flex items-center gap-2">
       <i class="pi pi-lock"></i>
-      Gatos Fijos
+      Gastos Fijos
+    </p-tab>
+    <p-tab value="tab3" class="flex items-center gap-2">
+      <i class="pi pi-euro"></i>
+      Préstamos
     </p-tab>
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel value="tab1">
       <app-listado-categorias></app-listado-categorias>
     </p-tabpanel>
-    <p-tabpanel value="tab2"> jhash ashhjas jhhasjkhhja jhhj </p-tabpanel>
+    <p-tabpanel value="tab2">
+      <app-gastos-fijos></app-gastos-fijos>
+    </p-tabpanel>
+    <p-tabpanel value="tab3">
+      <app-prestamo></app-prestamo>
+    </p-tabpanel>
   </p-tabpanels>
 </p-tabs>

@@ -18,6 +18,11 @@ export interface IMovimiento {
    * descontar el importe traspasado del pendiente de su presupuesto.
    */
   presupuestoClave: string;
+  /**
+   * Id del gasto fijo (`gastos_fijos`) que originó el movimiento.
+   * Cadena vac��a = movimiento manual.
+   */
+  gastoFijoId: string;
 }
 
 /** Normaliza cualquier fecha (Date, ISO, Date.now) a `aaaa-mm-dd`. */
@@ -85,6 +90,11 @@ const movimientoSchema = new Schema<IMovimiento>(
       type: Boolean,
       required: true,
       default: false
+    },
+    gastoFijoId: {
+      type: String,
+      trim: true,
+      default: ''
     },
   },
   {

@@ -29,6 +29,11 @@ export interface Movimiento {
    * Solo la tienen los traspasos de sobrante a cuentas de ahorro.
    */
   presupuestoClave?: string;
+  /**
+   * Id del gasto fijo (`gastos_fijos`) que originó el movimiento.
+   * Cadena vacía = movimiento manual.
+   */
+  gastoFijoId?: string;
 }
 
 /**
