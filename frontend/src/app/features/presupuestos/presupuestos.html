@@ -126,16 +126,16 @@
           <!-- Traspaso del sobrante a una cuenta de ahorro -->
           <footer class="card-traspaso" (click)="$event.stopPropagation()">
             <div class="traspaso-cuenta">
-              <label [for]="'cuenta-' + item.presupuesto.clave">Cuenta de ahorro destino</label>
+              <label [for]="'cuenta-' + item.presupuesto.clave">Cuenta de destino</label>
               <p-select
                 [inputId]="'cuenta-' + item.presupuesto.clave"
-                [options]="cuentasAhorroOptions()"
+                [options]="cuentasDestinoOptions()"
                 optionLabel="label"
                 optionValue="value"
                 [ngModel]="item.presupuesto.cuentaTransferencia"
                 (ngModelChange)="seleccionarCuenta(item.presupuesto, $event)"
                 placeholder="Elige cuenta"
-                [disabled]="!cuentasAhorro().length"
+                [disabled]="!cuentasDestino().length"
                 appendTo="body"
                 styleClass="full-width"
               ></p-select>
@@ -153,6 +153,10 @@
             } @else if (!item.presupuesto.cuentaTransferencia) {
               <small class="traspaso-hint">
                 Sin cuenta de destino: se elegirá al confirmar el traspaso.
+              </small>
+            } @else if (esPrestamo(item.presupuesto.cuentaTransferencia)) {
+              <small class="traspaso-hint">
+                El sobrante amortizará la deuda de «{{ nombreCuenta(item.presupuesto.cuentaTransferencia) }}».
               </small>
             }
           </footer>
@@ -361,12 +365,12 @@
 
             <div class="form-field">
               <label [for]="'cuenta-traspaso-' + fila.presupuesto.clave">
-                Cuenta de ahorro destino *
+                Cuenta de destino *
               </label>
               <p-select
                 [inputId]="'cuenta-traspaso-' + fila.presupuesto.clave"
                 [name]="'cuenta-traspaso-' + fila.presupuesto.clave"
-                [options]="cuentasAhorroOptions()"
+                [options]="cuentasDestinoOptions()"
                 optionLabel="label"
                 optionValue="value"
                 [ngModel]="fila.cuenta"
@@ -378,8 +382,15 @@
             </div>
           </div>
 
-          @if (multiplicadorDe(fila.cuenta) > 1) {
+          @if (esPrestamo(fila.cuenta)) {
             <small class="form-hint">
+              <i class="pi pi-info-circle"></i>
+              Amortización: la deuda pendiente de «{{ nombreCuenta(fila.cuenta) }}» bajará
+              {{ (fila.importe || 0) | currency: 'EUR' }}.
+            </small>
+          } @else if (multiplicadorDe(fila.cuenta) > 1) {
+            <small class="form-hint">
+              <i class="pi pi-info-circle"></i>
               Multiplicador ×{{ multiplicadorDe(fila.cuenta) }}: el saldo de esta cuenta
               sumará
               {{ (fila.importe || 0) * multiplicadorDe(fila.cuenta) | currency: 'EUR' }}.
@@ -387,7 +398,7 @@
           } @else if (!fila.cuenta) {
             <small class="field-error">
               <i class="pi pi-exclamation-circle"></i>
-              Elige la cuenta de ahorro de destino para «{{ fila.presupuesto.nombre }}».
+              Elige la cuenta de destino para «{{ fila.presupuesto.nombre }}».
             </small>
           }
         </div>
@@ -411,9 +422,17 @@
       <strong>{{ totalTraspaso() | currency: 'EUR' }}</strong>
     </div>
 
-    @if (saldoTraspaso() !== totalTraspaso()) {
+    @if (saldoTraspaso() > 0) {
       <small class="form-hint">
+        <i class="pi pi-arrow-up"></i>
         El saldo de tus cuentas de ahorro subirá {{ saldoTraspaso() | currency: 'EUR' }}.
+      </small>
+    }
+
+    @if (deudaTraspaso() > 0) {
+      <small class="form-hint">
+        <i class="pi pi-arrow-down"></i>
+        La deuda pendiente de tu préstamo bajará {{ deudaTraspaso() | currency: 'EUR' }}.
       </small>
     }
 

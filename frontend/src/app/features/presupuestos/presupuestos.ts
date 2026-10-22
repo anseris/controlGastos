@@ -202,14 +202,23 @@ export class Presupuestos implements OnInit {
 
   // --- Traspaso del sobrante a las cuentas de ahorro ---
 
-  /** Cuentas de ahorro (los préstamos no admiten traspasos). */
-  readonly cuentasAhorro = computed(() =>
-    this.bancosService.cuentas().filter((cuenta) => cuenta.tipo === 'ahorro')
+  /**
+   * Cuentas que pueden recibir el traspaso: los ahorros (suman saldo) y los
+   * préstamos (el traspaso amortiza la deuda pendiente).
+   */
+  readonly cuentasDestino = computed(() =>
+    this.bancosService
+      .cuentas()
+      .filter((cuenta) => cuenta.tipo === 'ahorro' || cuenta.tipo === 'prestamo')
   );
 
   /** Opciones del desplegable de cuenta destino. */
-  readonly cuentasAhorroOptions = computed(() =>
-    this.cuentasAhorro().map((cuenta) => ({ label: cuenta.nombre, value: cuenta.id }))
+  readonly cuentasDestinoOptions = computed(() =>
+    this.cuentasDestino().map((cuenta) => ({
+      // En los préstamos el traspaso amortiza la deuda: se aclara en la etiqueta.
+      label: cuenta.tipo === 'prestamo' ? `${cuenta.nombre} (amortizar deuda)` : cuenta.nombre,
+      value: cuenta.id,
+    }))
   );
 
   /** Días del mes que se pueden elegir como umbral de traspaso. */
@@ -458,8 +467,8 @@ export class Presupuestos implements OnInit {
     if (!this.transferible()) {
       return `Disponible a partir del ${this.formatearFecha(this.fechaTransferencia())}.`;
     }
-    if (!this.cuentasAhorro().length) {
-      return 'No tienes cuentas de ahorro: créalas en «Mis bancos».';
+    if (!this.cuentasDestino().length) {
+      return 'No tienes cuentas donde ahorrar: créalas en «Mis bancos».';
     }
     if (item.importePendiente <= 0) {
       return 'No hay sobrante pendiente en este presupuesto.';
@@ -555,9 +564,19 @@ export class Presupuestos implements OnInit {
     return this.bancosService.porId(cuentaId)?.multiplicador || 1;
   }
 
+  /** ¿La cuenta indicada es un préstamo (el traspaso amortiza la deuda)? */
+  esPrestamo(cuentaId: string): boolean {
+    return this.bancosService.porId(cuentaId)?.tipo === 'prestamo';
+  }
+
+  /** Nombre de la cuenta indicada. */
+  nombreCuenta(cuentaId: string): string {
+    return this.bancosService.porId(cuentaId)?.nombre ?? '';
+  }
+
   /** ¿La cuenta indicada existe y admite traspasos? */
   private cuentaValida(cuentaId: string): boolean {
-    return this.cuentasAhorro().some((cuenta) => cuenta.id === cuentaId);
+    return this.cuentasDestino().some((cuenta) => cuenta.id === cuentaId);
   }
 
   /** Total a traspasar (suma de los importes introducidos). */
@@ -567,11 +586,25 @@ export class Presupuestos implements OnInit {
     );
   }
 
-  /** Incremento del saldo de las cuentas destino (aplica los multiplicadores). */
+  /** Incremento del saldo de las cuentas de ahorro destino (aplica los multiplicadores). */
   saldoTraspaso(): number {
     return this.redondear(
       this.filasTraspaso().reduce(
-        (suma, fila) => suma + (Number(fila.importe) || 0) * this.multiplicadorDe(fila.cuenta),
+        (suma, fila) =>
+          this.esPrestamo(fila.cuenta)
+            ? suma
+            : suma + (Number(fila.importe) || 0) * this.multiplicadorDe(fila.cuenta),
+        0
+      )
+    );
+  }
+
+  /** Descenso de la deuda pendiente de los préstamos destino. */
+  deudaTraspaso(): number {
+    return this.redondear(
+      this.filasTraspaso().reduce(
+        (suma, fila) =>
+          this.esPrestamo(fila.cuenta) ? suma + (Number(fila.importe) || 0) : suma,
         0
       )
     );
@@ -633,10 +666,14 @@ export class Presupuestos implements OnInit {
     this.transferiendo.set(true);
 
     const peticiones = traspasos.map((traspaso) => {
+      const esPrestamo = traspaso.cuenta.tipo === 'prestamo';
       const payload: CrearMovimiento = {
         fecha,
-        descripcion: `Traspaso de presupuesto «${traspaso.presupuesto.nombre}»`,
-        // El dinero entra en la cuenta de ahorro como gasto con categoría 'Ahorro'.
+        descripcion: esPrestamo
+          ? `Amortización de préstamo desde presupuesto «${traspaso.presupuesto.nombre}»`
+          : `Traspaso de presupuesto «${traspaso.presupuesto.nombre}»`,
+        // El dinero entra en la cuenta destino como gasto con categoría 'Ahorro'.
+        // En un préstamo esto amortiza la deuda pendiente.
         categoria: 'Ahorro',
         tipoAhorro: traspaso.cuenta.id,
         ingreso: 0,
@@ -678,7 +715,11 @@ export class Presupuestos implements OnInit {
   private resumenTraspaso(traspasos: TraspasoPrevisto[]): string {
     const total = this.redondear(traspasos.reduce((suma, t) => suma + t.importe, 0));
     const detalle = traspasos
-      .map((traspaso) => `${traspaso.presupuesto.nombre} → ${traspaso.cuenta.nombre}`)
+      .map((traspaso) =>
+        traspaso.cuenta.tipo === 'prestamo'
+          ? `${traspaso.presupuesto.nombre} → amortización de «${traspaso.cuenta.nombre}»`
+          : `${traspaso.presupuesto.nombre} → ${traspaso.cuenta.nombre}`
+      )
       .join(', ');
     return `${total.toFixed(2)} € traspasados (${detalle}).`;
   }

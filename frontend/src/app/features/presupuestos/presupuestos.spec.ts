@@ -42,6 +42,19 @@ describe('Presupuestos', () => {
     orden: 1,
   };
 
+  const cuentaPrestamo = {
+    _id: 'c2',
+    clave: 'prestamo',
+    nombre: 'Préstamo',
+    tipo: 'prestamo',
+    saldoOrigen: 1000,
+    color: '#3b82f6',
+    icono: 'pi pi-building',
+    multiplicador: 1,
+    fija: true,
+    orden: 2,
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Presupuestos],
@@ -63,12 +76,24 @@ describe('Presupuestos', () => {
     }
   });
 
+  /**
+   * Busca una petición por su ruta final (la URL base puede cambiar entre
+   * desarrollo y producción sin romper los tests).
+   */
+  function esperar(ruta: string) {
+    return httpMock.expectOne((req) => req.url.endsWith(`/api${ruta}`));
+  }
+
   /** Responde a las peticiones que hace el componente al iniciarse. */
-  function cargarInicial(movimientos: unknown[] = [], presupuestos: unknown[] = [presupuestoCasa]) {
-    httpMock.expectOne('http://localhost:3000/api/movimientos').flush(movimientos);
-    httpMock.expectOne('http://localhost:3000/api/presupuestos').flush(presupuestos);
-    httpMock.expectOne('http://localhost:3000/api/categorias').flush([]);
-    httpMock.expectOne('http://localhost:3000/api/cuentas-banco').flush([cuentaIng]);
+  function cargarInicial(
+    movimientos: unknown[] = [],
+    presupuestos: unknown[] = [presupuestoCasa],
+    cuentas: unknown[] = [cuentaIng]
+  ) {
+    esperar('/movimientos').flush(movimientos);
+    esperar('/presupuestos').flush(presupuestos);
+    esperar('/categorias').flush([]);
+    esperar('/cuentas-banco').flush(cuentas);
     fixture.detectChanges();
   }
 
@@ -111,7 +136,7 @@ describe('Presupuestos', () => {
 
     component.confirmarTraspaso();
 
-    const peticion = httpMock.expectOne('http://localhost:3000/api/movimientos');
+    const peticion = esperar('/movimientos');
     expect(peticion.request.method).toBe('POST');
     expect(peticion.request.body.categoria).toBe('Ahorro');
     expect(peticion.request.body.tipoAhorro).toBe('ing');
@@ -122,7 +147,7 @@ describe('Presupuestos', () => {
     peticion.flush({});
 
     // El componente recarga los movimientos tras el traspaso.
-    httpMock.expectOne('http://localhost:3000/api/movimientos').flush([]);
+    esperar('/movimientos').flush([]);
   });
 
   it('permite traspasar solo la cantidad indicada por el usuario', () => {
@@ -134,11 +159,11 @@ describe('Presupuestos', () => {
     component.filasTraspaso()[0].importe = 250;
     component.confirmarTraspaso();
 
-    const peticion = httpMock.expectOne('http://localhost:3000/api/movimientos');
+    const peticion = esperar('/movimientos');
     expect(peticion.request.body.gasto).toBe(250);
     peticion.flush({});
 
-    httpMock.expectOne('http://localhost:3000/api/movimientos').flush([]);
+    esperar('/movimientos').flush([]);
   });
 
   it('no deja traspasar más importe del disponible', () => {
@@ -152,7 +177,47 @@ describe('Presupuestos', () => {
 
     // Con un importe inválido no se registra ningún movimiento.
     component.confirmarTraspaso();
-    httpMock.expectNone('http://localhost:3000/api/movimientos');
+    httpMock.expectNone((req) => req.url.endsWith('/api/movimientos'));
+  });
+
+  it('ofrece el préstamo como cuenta de destino del traspaso', () => {
+    cargarInicial([], [presupuestoCasa], [cuentaIng, cuentaPrestamo]);
+
+    const valores = component.cuentasDestinoOptions().map((opcion) => opcion.value);
+    expect(valores).toContain('ing');
+    expect(valores).toContain('prestamo');
+    expect(component.esPrestamo('prestamo')).toBe(true);
+    expect(component.esPrestamo('ing')).toBe(false);
+  });
+
+  it('amortiza el préstamo al traspasarle el sobrante', () => {
+    cargarInicial(
+      [
+        { _id: 'm1', fecha: `${mesActual}-05`, descripcion: 'Sueldo', categoria: 'Sueldo', ingreso: 1000, gasto: 0, tipo: 'ingreso', esFijo: false },
+      ],
+      [{ ...presupuestoCasa, cuentaTransferencia: 'prestamo' }],
+      [cuentaIng, cuentaPrestamo]
+    );
+
+    component.abrirTraspaso(component.presupuestos()[0]);
+    expect(component.filasTraspaso()[0].cuenta).toBe('prestamo');
+
+    component.actualizarImporte('casa', 300);
+    expect(component.traspasoValido()).toBe(true);
+    expect(component.deudaTraspaso()).toBe(300);
+    expect(component.saldoTraspaso()).toBe(0);
+
+    component.confirmarTraspaso();
+
+    const peticion = esperar('/movimientos');
+    expect(peticion.request.body.categoria).toBe('Ahorro');
+    expect(peticion.request.body.tipoAhorro).toBe('prestamo');
+    expect(peticion.request.body.gasto).toBe(300);
+    expect(peticion.request.body.tipo).toBe('gasto');
+    expect(peticion.request.body.presupuestoClave).toBe('casa');
+    peticion.flush({});
+
+    esperar('/movimientos').flush([]);
   });
 
   it('no permite traspasar en un mes que todavía no ha llegado', () => {
