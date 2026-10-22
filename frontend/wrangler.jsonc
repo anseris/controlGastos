@@ -1,0 +1,10 @@
+
+{
+  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+  "name": "wispy-wood-caf6",
+  "compatibility_date": "2026-10-21",
+  "assets": {
+    "directory": "./dist/frontend/browser",
+    "not_found_handling": "single-page-application"
+  }
+}
