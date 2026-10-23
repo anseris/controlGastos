@@ -1,24 +1,20 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { SelectModule } from 'primeng/select';
-import { MessageService } from 'primeng/api';
 import {
   AmortizacionCuota,
   AmortizacionPrestamoService,
-  EstadoCuota,
   calcularEstadoPrestamo,
+  EstadoCuota,
 } from '../../../services/amortizacion-prestamo';
 import { BancosService, CuentaBanco } from '../../../services/bancos';
-import {
-  DatosGastoFijo,
-  GastoFijo,
-  GastosFijosService,
-} from '../../../services/gastos-fijos';
+import { DatosGastoFijo, GastoFijo, GastosFijosService } from '../../../services/gastos-fijos';
 import { MovimientosStore } from '../../../services/movimientos-store';
+import { MessageService } from 'primeng/api';
 
 /** Categoría que se usa para los movimientos de ahorro (cuenta del préstamo). */
 const CATEGORIA_AHORRO = 'Ahorro';
@@ -58,7 +54,7 @@ export class Prestamo implements OnInit {
 
   /** Cuentas de tipo préstamo de "Mis bancos". */
   readonly cuentasPrestamo = computed<CuentaBanco[]>(() =>
-    this.bancos.cuentas().filter((cuenta) => cuenta.tipo === 'prestamo')
+    this.bancos.cuentas().filter((cuenta) => cuenta.tipo === 'prestamo'),
   );
 
   /** Cuenta del préstamo con la que se calculan los pagos. */
@@ -70,19 +66,18 @@ export class Prestamo implements OnInit {
     if (cuentas.length === 0) {
       return null;
     }
-    return (
-      cuentas.find((cuenta) => cuenta.id === this.cuentaSeleccionada()) ?? cuentas[0]
-    );
+    return cuentas.find((cuenta) => cuenta.id === this.cuentaSeleccionada()) ?? cuentas[0];
   });
 
   /** Estado de pago de cada cuota (se resaltan las ya amortizadas). */
-  readonly estados = computed<EstadoCuota[]>(() =>
-    calcularEstadoPrestamo(
-      this.cuotas(),
-      this.datos(),
-      this.store.movimientos(),
-      this.cuentaPrestamo()?.id ?? null
-    ).estados
+  readonly estados = computed<EstadoCuota[]>(
+    () =>
+      calcularEstadoPrestamo(
+        this.cuotas(),
+        this.datos(),
+        this.store.movimientos(),
+        this.cuentaPrestamo()?.id ?? null,
+      ).estados,
   );
 
   /** Resumen del préstamo (capital pendiente, amortizado, cuota del mes...). */
@@ -92,8 +87,8 @@ export class Prestamo implements OnInit {
         this.cuotas(),
         this.datos(),
         this.store.movimientos(),
-        this.cuentaPrestamo()?.id ?? null
-      ).resumen
+        this.cuentaPrestamo()?.id ?? null,
+      ).resumen,
   );
 
   /**
@@ -112,17 +107,14 @@ export class Prestamo implements OnInit {
       return marcado;
     }
 
-    const deLaCuenta = gastos.find(
-      (gasto) => !!cuentaId && gasto.tipoAhorro === cuentaId
-    );
+    const deLaCuenta = gastos.find((gasto) => !!cuentaId && gasto.tipoAhorro === cuentaId);
     if (deLaCuenta) {
       return deLaCuenta;
     }
 
     return (
-      gastos.find((gasto) =>
-        /cuota.*pr[eé]stamo|pr[eé]stamo.*cuota/i.test(gasto.descripcion)
-      ) ?? null
+      gastos.find((gasto) => /cuota.*pr[eé]stamo|pr[eé]stamo.*cuota/i.test(gasto.descripcion)) ??
+      null
     );
   });
 
@@ -150,12 +142,12 @@ export class Prestamo implements OnInit {
     this.cuotas().map((cuota) => ({
       label: `${this.formatoFecha(cuota.fecha)} · ${cuota.cuota.toFixed(2)} €`,
       value: cuota.fecha,
-    }))
+    })),
   );
 
   /** Opciones del selector de cuenta de "Mis bancos". */
   readonly opcionesCuenta = computed(() =>
-    this.cuentasPrestamo().map((cuenta) => ({ label: cuenta.nombre, value: cuenta.id }))
+    this.cuentasPrestamo().map((cuenta) => ({ label: cuenta.nombre, value: cuenta.id })),
   );
 
   ngOnInit(): void {
@@ -187,12 +179,10 @@ export class Prestamo implements OnInit {
     const lector = new FileReader();
     lector.onload = () => {
       const contenido = String(lector.result ?? '');
-      this.amortizacionService
-        .importar(contenido)
-        .subscribe({
-          next: (resultado) => this.finalizaImportacion(resultado.mensaje),
-          error: (err) => this.errorImportacion(err),
-        });
+      this.amortizacionService.importar(contenido).subscribe({
+        next: (resultado) => this.finalizaImportacion(resultado.mensaje),
+        error: (err) => this.errorImportacion(err),
+      });
     };
     lector.onerror = () => {
       this.importando.set(false);
@@ -290,9 +280,7 @@ export class Prestamo implements OnInit {
 
     const datos: DatosGastoFijo = {
       dia: Number(cuota.fecha.slice(8, 10)),
-      descripcion:
-        existente?.descripcion ||
-        `Cuota ${this.datos()?.descripcion || 'del préstamo'}`,
+      descripcion: existente?.descripcion || `Cuota ${this.datos()?.descripcion || 'del préstamo'}`,
       categoria: existente?.categoria || CATEGORIA_AHORRO,
       importe: cuota.cuota,
       tipo: 'gasto',

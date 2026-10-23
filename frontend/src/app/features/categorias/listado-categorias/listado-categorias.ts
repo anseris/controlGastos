@@ -1,10 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { AddCategorias } from '../../../shared/modals/add-categorias/add-categorias';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Categoria, CategoriasService } from '../../../services/categorias';
-import { AddCategorias } from '../../../shared/modals/add-categorias/add-categorias';
 
 @Component({
   selector: 'app-listado-categorias',

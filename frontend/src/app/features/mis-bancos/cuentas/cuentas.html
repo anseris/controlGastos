@@ -1,0 +1,341 @@
+@if (cargando()) {
+  <div class="loading-state"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+} @else if (error()) {
+  <div class="error-state"><i class="pi pi-exclamation-triangle"></i> {{ error() }}</div>
+} @else {
+  <div class="bancos-head">
+    <div>
+      <h2>Mis bancos</h2>
+      <p>
+        Ahorro acumulado y movimientos del periodo:
+        <strong>{{ periodoLabel() }}</strong>
+      </p>
+    </div>
+    <p-button label="Añadir cuenta" icon="pi pi-plus" (onClick)="abrirNuevaCuenta()"></p-button>
+  </div>
+
+  @if (errorCuentas()) {
+    <div class="aviso-cuentas">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ errorCuentas() }}</span>
+      <p-button
+        label="Reintentar"
+        icon="pi pi-refresh"
+        [text]="true"
+        size="small"
+        (onClick)="recargarCuentas()"
+      ></p-button>
+    </div>
+  }
+
+  <div class="bancos-grid">
+    @for (item of cuentasCalculadas(); track item.cuenta.id) {
+      <article
+        class="banco-card"
+        [class.prestamo]="item.cuenta.tipo === 'prestamo'"
+        [class.active]="seleccionada() === item.cuenta.id"
+        (click)="seleccionar(item.cuenta.id)"
+      >
+        <header class="banco-head">
+          <span class="banco-icon" [style.backgroundColor]="item.cuenta.color">
+            <i [class]="item.cuenta.icono || 'pi pi-wallet'"></i>
+          </span>
+          <h3>{{ item.cuenta.nombre }}</h3>
+
+          <span class="card-actions" (click)="$event.stopPropagation()">
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              severity="secondary"
+              ariaLabel="Editar cuenta"
+              (onClick)="editarCuenta(item.cuenta)"
+            ></p-button>
+            @if (!item.cuenta.fija) {
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                ariaLabel="Eliminar cuenta"
+                (onClick)="eliminarCuenta(item.cuenta)"
+              ></p-button>
+            }
+          </span>
+        </header>
+
+        @if (item.cuenta.tipo === 'prestamo') {
+          <div class="banco-total">
+            <span class="monto-label">Capital pendiente</span>
+            <span class="monto-valor">
+              {{ item.disponible | currency: 'EUR' }}
+            </span>
+            <small class="origen-hint">
+              Total del préstamo:
+              {{ item.totalPrestamo ?? item.cuenta.saldoOrigen | currency: 'EUR' }}
+            </small>
+          </div>
+
+          <div class="prestamo-rows">
+            <div class="prestamo-row">
+              <span>Amortizado (capital)</span>
+              <strong>{{ item.prestado | currency: 'EUR' }}</strong>
+            </div>
+            <div class="prestamo-row">
+              <span>Cuota del mes</span>
+              <strong>{{ item.variacionMes | currency: 'EUR' }}</strong>
+            </div>
+          </div>
+
+          @if (item.cuotaCapital) {
+            <small class="bar-hint">
+              De la cuota: {{ item.cuotaCapital | currency: 'EUR' }} de capital ·
+              {{ item.cuotaInteres | currency: 'EUR' }} de interés
+            </small>
+          }
+
+          <div class="budget-bar">
+            <span
+              class="budget-bar-fill"
+              [style.width.%]="item.porcentajePrestamo"
+              [class.over]="item.disponible < 0"
+            ></span>
+          </div>
+          <small class="bar-hint">
+            {{ item.porcentajePrestamo | number: '1.0-0' }}% amortizado
+            @if (item.totalCuotas) {
+              · {{ item.cuotasPagadas }}/{{ item.totalCuotas }} cuotas pagadas
+            }
+          </small>
+        } @else {
+          <div class="banco-total">
+            <span class="monto-label">Saldo actual</span>
+            <span class="monto-valor">{{ item.saldoActual | currency: 'EUR' }}</span>
+            <small class="origen-hint">
+              Saldo de origen: {{ item.cuenta.saldoOrigen | currency: 'EUR' }}
+              @if (item.cuenta.multiplicador > 1) {
+                · ahorro ×{{ item.cuenta.multiplicador }}
+              }
+            </small>
+          </div>
+
+          <div class="banco-mes">
+            <span>Este mes</span>
+            <strong>{{ item.variacionMes | currency: 'EUR' }}</strong>
+          </div>
+        }
+      </article>
+    }
+  </div>
+
+  <!-- Detalle de la card clicada (mes seleccionado) -->
+  @if (seleccionada()) {
+    <section class="detalle">
+      <div class="detalle-head">
+        <div>
+          <h3>Movimientos · {{ detalleTitulo() }}</h3>
+          <small>{{ periodoLabel() }} · {{ detalle().length }} movimiento(s)</small>
+        </div>
+        <p-button
+          icon="pi pi-times"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          ariaLabel="Cerrar detalle"
+          (onClick)="cerrarDetalle()"
+        ></p-button>
+      </div>
+
+      <p-table [value]="detalle()" [rowHover]="true" styleClass="detalle-table">
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="fecha-col">Fecha</th>
+            <th>Descripción</th>
+            <th class="importe-col">Importe</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-mov>
+          <tr>
+            <td class="fecha-col">{{ mov.fecha | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ mov.descripcion || '—' }}</td>
+            <td class="importe-col expense-text">
+              {{ mov.gasto | currency: 'EUR' }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3">
+              <div class="detalle-empty">
+                No hay movimientos de {{ detalleTitulo() }} en este periodo.
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+}
+
+<!-- Alta / edición de cuentas -->
+<p-dialog
+  [visible]="showCuentaDialog()"
+  (visibleChange)="onCuentaDialogVisibility($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(620px, 94vw)' }"
+  [header]="cuentaEditando() ? 'Editar cuenta' : 'Nueva cuenta'"
+  styleClass="movement-dialog"
+>
+  <form class="movement-form" (ngSubmit)="guardarCuenta()">
+    <div class="form-field">
+      <label for="cuentaNombre">Nombre de la cuenta *</label>
+      <input
+        id="cuentaNombre"
+        pInputText
+        name="nombre"
+        [(ngModel)]="formCuenta.nombre"
+        placeholder="Ej. Banco Santander"
+        class="full-width"
+        required
+        maxlength="60"
+        autocomplete="off"
+      />
+      @if (submittedCuenta && !formCuenta.nombre.trim()) {
+        <small class="field-error">Introduce un nombre para la cuenta.</small>
+      }
+    </div>
+
+    <div class="form-columns">
+      <div class="form-field">
+        <label for="cuentaTipo">Tipo *</label>
+        <p-select
+          inputId="cuentaTipo"
+          name="tipo"
+          [options]="tipoCuentaOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="formCuenta.tipo"
+          [disabled]="!!cuentaEditando()"
+          appendTo="body"
+          styleClass="full-width"
+        ></p-select>
+        <small class="field-hint">
+          @if (cuentaEditando()) {
+            El tipo no se puede cambiar una vez creada la cuenta.
+          } @else {
+            Elige si quieres controlar un ahorro o un préstamo.
+          }
+        </small>
+      </div>
+
+      <div class="form-field">
+        <label for="cuentaSaldo">
+          {{ formCuenta.tipo === 'prestamo' ? 'Total estipulado *' : 'Saldo inicial *' }}
+        </label>
+        <p-inputNumber
+          inputId="cuentaSaldo"
+          name="saldoOrigen"
+          [(ngModel)]="formCuenta.saldoOrigen"
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          [step]="50"
+          [showButtons]="true"
+          suffix=" €"
+          styleClass="full-width"
+        ></p-inputNumber>
+        <small class="field-hint">
+          {{
+            formCuenta.tipo === 'prestamo'
+              ? 'Cantidad total del préstamo.'
+              : 'Dinero que ya había en la cuenta antes de los movimientos.'
+          }}
+        </small>
+      </div>
+    </div>
+
+    <div class="form-columns">
+      <div class="form-field">
+        <label for="cuentaColor">Color *</label>
+        <p-select
+          inputId="cuentaColor"
+          name="color"
+          [options]="coloresCuenta"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="formCuenta.color"
+          [filter]="true"
+          filterPlaceholder="Buscar color"
+          appendTo="body"
+          styleClass="full-width"
+        >
+          <ng-template #item let-color>
+            <div class="select-option">
+              <span class="color-circle" [style.backgroundColor]="color.value"></span>
+              <span>{{ color.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template #selectedItem let-color>
+            @if (color) {
+              <div class="select-option">
+                <span class="color-circle" [style.backgroundColor]="color.value"></span>
+                <span>{{ color.label }}</span>
+              </div>
+            }
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="form-field">
+        <label>Icono</label>
+        <div class="icon-picker">
+          @for (icono of iconosCuenta; track icono.value) {
+            <button
+              type="button"
+              class="icon-cell"
+              [class.selected]="formCuenta.icono === icono.value"
+              (click)="formCuenta.icono = icono.value"
+              [attr.aria-label]="icono.label"
+            >
+              <i [class]="icono.value"></i>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="cuenta-preview">
+      <span class="preview-badge" [style.backgroundColor]="formCuenta.color || '#e5e7eb'">
+        <i [class]="formCuenta.icono || 'pi pi-wallet'"></i>
+      </span>
+      <div class="preview-text">
+        <strong>{{ formCuenta.nombre.trim() || 'Nueva cuenta' }}</strong>
+        <small>
+          {{ formCuenta.tipo === 'prestamo' ? 'Préstamo' : 'Cuenta de ahorro' }}
+        </small>
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        [disabled]="guardandoCuenta()"
+        (onClick)="cerrarCuentaDialog()"
+      ></p-button>
+      <p-button
+        [label]="cuentaEditando() ? 'Guardar cambios' : 'Guardar cuenta'"
+        icon="pi pi-check"
+        type="submit"
+        [loading]="guardandoCuenta()"
+        [disabled]="guardandoCuenta()"
+      ></p-button>
+    </div>
+  </form>
+</p-dialog>
+
+<p-confirmDialog key="bancos"></p-confirmDialog>

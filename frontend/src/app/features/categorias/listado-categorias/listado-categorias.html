@@ -35,14 +35,11 @@
           ></p-button>
         </div>
 
-        <span
-          class="categoria-icon"
-          [style.backgroundColor]="categoria.color || '#9ca3af'"
-        >
+        <span class="categoria-icon" [style.backgroundColor]="categoria.color || '#9ca3af'">
           @if (categoria.icono && categoria.hasIcono) {
             <i [class]="categoria.icono"></i>
           } @else {
-            <i>{{categoria.primeraLetra}}</i>
+            <i>{{ categoria.primeraLetra }}</i>
           }
         </span>
         <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>

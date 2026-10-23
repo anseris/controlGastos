@@ -130,9 +130,13 @@
 }
 
 .donut-total {
+  max-width: 100%;
+  padding: 0 8px;
   font-weight: 800;
   color: #1f2937;
   font-size: 15px;
+  line-height: 1.15;
+  word-break: break-word;
 }
 
 .donut-label {
@@ -164,6 +168,10 @@
 
 .legend-dot.expense {
   background: #c34b5a;
+}
+
+.legend-dot.pending {
+  background: #22c55e;
 }
 
 .legend-text {
@@ -262,18 +270,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  min-width: 0;
 }
 
 .h-bar-label {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-weight: 600;
   color: #1f2937;
 }
 
 .h-dot {
+  display: inline-block;
+  flex: 0 0 auto;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -291,13 +304,32 @@
   background: #4169e1;
 }
 
-.h-dot.fixed {
+.h-dot.fijos {
   background: #b45309;
 }
 
 .h-bar-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
   font-weight: 700;
   color: #1f2937;
+}
+
+.h-bar-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fdf1e3;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .h-bar-track {
@@ -338,7 +370,7 @@
   background: #c34b5a;
 }
 
-.h-bar-fill.fixed {
+.h-bar-fill.fijos {
   background: #b45309;
 }
 

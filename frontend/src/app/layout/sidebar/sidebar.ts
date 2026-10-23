@@ -9,10 +9,14 @@ import { NgClass } from '@angular/common';
   styleUrl: './sidebar.scss',
 })
 export class Sidebar {
-  resumenAnualOpen = false;
+  menus = {
+    resumenAnual: false,
+    categorias: false,
+    cuentas: false,
+    resumen: false,
+  };
 
-  toggleResumenAnual(): void {
-    this.resumenAnualOpen = !this.resumenAnualOpen;
+  toggleMenu(menu: keyof Sidebar['menus']): void {
+    this.menus[menu] = !this.menus[menu];
   }
 }
-

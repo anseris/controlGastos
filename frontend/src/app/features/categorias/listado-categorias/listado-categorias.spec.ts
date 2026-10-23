@@ -1,7 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ListadoCategorias } from './listado-categorias';
 
@@ -12,12 +9,6 @@ describe('ListadoCategorias', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ListadoCategorias],
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        MessageService,
-        ConfirmationService,
-      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ListadoCategorias);

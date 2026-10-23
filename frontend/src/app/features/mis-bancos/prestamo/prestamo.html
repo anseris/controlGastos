@@ -1,3 +1,4 @@
+<p>prestamo works!</p>
 <section class="prestamo-cuadro">
   <!-- Cabecera -->
   <header class="cuadro-head">
@@ -67,8 +68,7 @@
       <i class="pi pi-inbox"></i>
       <strong>Sin cuadro de amortización</strong>
       <span>
-        Importa el archivo <code>CuadroDeAmortizacion.XLS</code> para tener las cuotas
-        en la BBDD.
+        Importa el archivo <code>CuadroDeAmortizacion.XLS</code> para tener las cuotas en la BBDD.
       </span>
     </div>
   } @else {
@@ -76,15 +76,15 @@
     <div class="datos-cuadro">
       <div class="dato">
         <span>Capital inicial</span>
-        <strong>{{ (datos()?.capitalInicial ?? 0) | currency: 'EUR' }}</strong>
+        <strong>{{ datos()?.capitalInicial ?? 0 | currency: 'EUR' }}</strong>
       </div>
       <div class="dato">
         <span>Capital pendiente</span>
-        <strong>{{ (resumen()?.capitalPendiente ?? 0) | currency: 'EUR' }}</strong>
+        <strong>{{ resumen()?.capitalPendiente ?? 0 | currency: 'EUR' }}</strong>
       </div>
       <div class="dato">
         <span>Cuota del mes</span>
-        <strong>{{ (resumen()?.cuotaActual?.cuota ?? 0) | currency: 'EUR' }}</strong>
+        <strong>{{ resumen()?.cuotaActual?.cuota ?? 0 | currency: 'EUR' }}</strong>
         @if (resumen()?.cuotaActual; as cuota) {
           <small>
             {{ cuota.amortizacionCapital | currency: 'EUR' }} de capital ·
@@ -94,10 +94,8 @@
       </div>
       <div class="dato">
         <span>Cuotas pagadas</span>
-        <strong>
-          {{ resumen()?.cuotasPagadas ?? 0 }} / {{ resumen()?.totalCuotas ?? 0 }}
-        </strong>
-        <small>Amortizado: {{ (resumen()?.amortizadoPeriodo ?? 0) | currency: 'EUR' }}</small>
+        <strong> {{ resumen()?.cuotasPagadas ?? 0 }} / {{ resumen()?.totalCuotas ?? 0 }} </strong>
+        <small>Amortizado: {{ resumen()?.amortizadoPeriodo ?? 0 | currency: 'EUR' }}</small>
       </div>
       @if (datos(); as info) {
         <div class="dato">
@@ -115,9 +113,9 @@
         <div>
           <h3>Gasto fijo de la cuota</h3>
           <p>
-            El importe del gasto fijo se toma de la columna <strong>Cuota</strong> del
-            cuadro. El movimiento se imputa a la cuenta del préstamo, de modo que en
-            "Mis bancos" solo se descuenta la <strong>amortización de capital</strong>.
+            El importe del gasto fijo se toma de la columna <strong>Cuota</strong> del cuadro. El
+            movimiento se imputa a la cuenta del préstamo, de modo que en "Mis bancos" solo se
+            descuenta la <strong>amortización de capital</strong>.
           </p>
         </div>
       </div>
@@ -166,15 +164,13 @@
               @if (!gasto.tipoAhorro) {
                 <small class="desfase">
                   <i class="pi pi-exclamation-triangle"></i>
-                  No tiene cuenta asignada: "Mis bancos" no descontará el capital
-                  amortizado.
+                  No tiene cuenta asignada: "Mis bancos" no descontará el capital amortizado.
                 </small>
               }
               @if (importeDesfasado(); as desfasado) {
                 <small class="desfase">
                   <i class="pi pi-info-circle"></i>
-                  El importe no coincide con la cuota
-                  ({{ desfasado | currency: 'EUR' }}).
+                  El importe no coincide con la cuota ({{ desfasado | currency: 'EUR' }}).
                 </small>
               }
             } @else {
@@ -200,8 +196,8 @@
       <div class="tabla-head">
         <h3>Cuadro de amortización</h3>
         <small>
-          Las filas ya amortizadas se resaltan en verde. Si el Excel cambia por los
-          intereses, vuelve a importarlo para actualizar la tabla.
+          Las filas ya amortizadas se resaltan en verde. Si el Excel cambia por los intereses,
+          vuelve a importarlo para actualizar la tabla.
         </small>
       </div>
 
@@ -223,7 +219,10 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-estado>
-          <tr [class.fila-pagada]="estado.liquidada" [class.fila-parcial]="estado.pagado > 0 && !estado.liquidada">
+          <tr
+            [class.fila-pagada]="estado.liquidada"
+            [class.fila-parcial]="estado.pagado > 0 && !estado.liquidada"
+          >
             <td class="col-mes">{{ estado.cuota.mes }}</td>
             <td class="col-fecha">{{ estado.cuota.fecha | date: 'dd/MM/yyyy' }}</td>
             <td class="col-importe">
@@ -239,10 +238,7 @@
               {{ estado.cuota.capitalPendiente | currency: 'EUR' }}
             </td>
             <td class="col-estado">
-              <p-tag
-                [value]="etiquetaEstado(estado)"
-                [severity]="severidadEstado(estado)"
-              ></p-tag>
+              <p-tag [value]="etiquetaEstado(estado)" [severity]="severidadEstado(estado)"></p-tag>
               @if (estado.extra > 0) {
                 <small class="extra">+{{ estado.extra | currency: 'EUR' }} extra</small>
               }

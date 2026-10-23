@@ -5,59 +5,112 @@
         <i class="pi pi-list"></i><span>Movimientos</span>
       </a>
     </li>
-    <li>
-      <a routerLink="/resumen-mensual" routerLinkActive="active">
-        <i class="pi pi-chart-bar"></i><span>Resumen Mensual</span>
-      </a>
-    </li>
+
+    <!-- PRESUPUESTOS -->
     <li>
       <a routerLink="/presupuestos" routerLinkActive="active">
         <i class="pi pi-euro"></i><span>Presupuestos</span>
       </a>
     </li>
+    <!-- GASTOS FIJOS -->
     <li>
-      <a routerLink="/mis-bancos" routerLinkActive="active">
-        <i class="pi pi-money-bill"></i><span>Mis Bancos (Ahorros)</span>
+      <a routerLink="/gastos-fijos" routerLinkActive="active">
+        <i class="pi pi-thumbtack"></i><span>Gastos Fijos</span>
       </a>
     </li>
-
+    <!-- RESUMENES -->
     <li class="menu-group">
       <button
         type="button"
         class="menu-toggle"
-        (click)="toggleResumenAnual()"
-        [attr.aria-expanded]="resumenAnualOpen"
+        (click)="toggleMenu('resumen')"
+        [attr.aria-expanded]="menus.resumen"
       >
         <span class="menu-toggle-left">
-          <i class="pi pi-chart-line"></i><span>Resumen anual</span>
+          <i class="pi pi-chart-bar"></i>
+          <span>Resúmenes</span>
         </span>
-        <i class="pi pi-chevron-down menu-chevron" [ngClass]="{ open: resumenAnualOpen }"></i>
+
+        <i class="pi pi-chevron-down menu-chevron" [ngClass]="{ open: menus.resumen }"></i>
       </button>
-      @if (resumenAnualOpen) {
+
+      @if (menus.resumen) {
         <ul class="submenu">
           <li>
-            <a routerLink="/resumen-anual/opcion1" routerLinkActive="active">
-              <span>Opción 1</span>
+            <a routerLink="/dashboard/resumen-mensual" routerLinkActive="active">
+              <span>Mensual</span>
             </a>
           </li>
           <li>
-            <a routerLink="/resumen-anual/opcion2" routerLinkActive="active">
-              <span>Opción 2</span>
+            <a routerLink="/dashboard/resumen-anual" routerLinkActive="active">
+              <span>Anual</span>
+            </a>
+          </li>
+        </ul>
+      }
+    </li>
+    <!-- CUENTAS -->
+    <li class="menu-group">
+      <button
+        type="button"
+        class="menu-toggle"
+        (click)="toggleMenu('cuentas')"
+        [attr.aria-expanded]="menus.cuentas"
+      >
+        <span class="menu-toggle-left">
+          <i class="pi pi-money-bill"></i>
+          <span>Cuentas</span>
+        </span>
+
+        <i class="pi pi-chevron-down menu-chevron" [ngClass]="{ open: menus.cuentas }"></i>
+      </button>
+
+      @if (menus.cuentas) {
+        <ul class="submenu">
+          <li>
+            <a routerLink="/mis-bancos/cuentas" routerLinkActive="active">
+              <span>Mis Cuentas</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/mis-bancos/prestamo" routerLinkActive="active">
+              <span>Prestamo</span>
             </a>
           </li>
         </ul>
       }
     </li>
 
-    <li>
-      <a routerLink="/categorias" routerLinkActive="active">
-        <i class="pi pi-tags"></i><span>Categorías</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/configuracion" routerLinkActive="active">
-        <i class="pi pi-cog"></i><span>Configuración</span>
-      </a>
+    <!-- CATEGORÍAS -->
+    <li class="menu-group">
+      <button
+        type="button"
+        class="menu-toggle"
+        (click)="toggleMenu('categorias')"
+        [attr.aria-expanded]="menus.categorias"
+      >
+        <span class="menu-toggle-left">
+          <i class="pi pi-tags"></i>
+          <span>Categorías</span>
+        </span>
+
+        <i class="pi pi-chevron-down menu-chevron" [ngClass]="{ open: menus.categorias }"></i>
+      </button>
+
+      @if (menus.categorias) {
+        <ul class="submenu">
+          <li>
+            <a routerLink="/categorias/resumen" routerLinkActive="active">
+              <span>Resumen</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/categorias/listado" routerLinkActive="active">
+              <span>Listado</span>
+            </a>
+          </li>
+        </ul>
+      }
     </li>
   </ul>
 </nav>

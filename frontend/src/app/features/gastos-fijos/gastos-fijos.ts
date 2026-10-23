@@ -1,18 +1,15 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
-import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectModule } from 'primeng/select';
+import { TagModule } from 'primeng/tag';
+import { AddGastoFijo } from '../../shared/modals/add-gasto-fijo/add-gasto-fijo';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { Categoria, CategoriasService } from '../../../services/categorias';
-import {
-  GastoFijo,
-  GastosFijosService,
-} from '../../../services/gastos-fijos';
-import { MovimientosStore } from '../../../services/movimientos-store';
-import { AddGastoFijo } from '../../../shared/modals/add-gasto-fijo/add-gasto-fijo';
+import { GastoFijo, GastosFijosService } from '../../services/gastos-fijos';
+import { Categoria, CategoriasService } from '../../services/categorias';
+import { MovimientosStore } from '../../services/movimientos-store';
 
 @Component({
   selector: 'app-gastos-fijos',
@@ -56,17 +53,15 @@ export class GastosFijos implements OnInit {
   readonly totalMensual = computed(() =>
     this.gastosFijos()
       .filter((gasto) => gasto.activo)
-      .reduce((suma, gasto) => suma + (gasto.importe ?? 0), 0)
+      .reduce((suma, gasto) => suma + (gasto.importe ?? 0), 0),
   );
 
   /** Número de gastos fijos activos. */
-  readonly totalActivos = computed(
-    () => this.gastosFijos().filter((gasto) => gasto.activo).length
-  );
+  readonly totalActivos = computed(() => this.gastosFijos().filter((gasto) => gasto.activo).length);
 
   /** Categoría associated a un gasto fijo (para el color e icono de la card). */
   private readonly categoriasPorNombre = computed(
-    () => new Map(this.categorias().map((c) => [c.nombre.toLowerCase(), c]))
+    () => new Map(this.categorias().map((c) => [c.nombre.toLowerCase(), c])),
   );
 
   ngOnInit(): void {

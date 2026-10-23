@@ -27,7 +27,7 @@
   border-radius: 9px;
   color: #4b5670;
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   transition: background 0.15s, color 0.15s;
 }
@@ -74,18 +74,24 @@
 }
 
 .menu-toggle {
-  width: 100%;
+  // width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 16px;
+  padding: 11px 12px;
   background: transparent;
   border: none;
-  color: #4f5b7a;
+  color: #4b5670;
   font: inherit;
   cursor: pointer;
-  text-align: left;
+  text-align: left;  
+  border-radius: 9px;
+  
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
 }
 
 .menu-toggle:hover {
@@ -100,7 +106,7 @@
 }
 
 .menu-chevron {
-  font-size: 12px;
+  font-size: 13px;
   transition: transform 0.2s ease;
 }
 
@@ -117,7 +123,8 @@
 }
 
 .submenu li a {
-  padding: 8px 12px;
+  padding: 8px 2px 8px 50px;
+  font-size: 13px;
   border-radius: 10px;
 }
 

@@ -1,9 +1,7 @@
 <div class="gastos-fijos-head">
   <div>
     <h2>Gastos fijos</h2>
-    <p>
-      Se añaden automáticamente a tus movimientos el día que indiques de cada mes.
-    </p>
+    <p>Se añaden automáticamente a tus movimientos el día que indiques de cada mes.</p>
   </div>
   <div class="head-acciones">
     <span class="total-pill">
@@ -17,11 +15,7 @@
       [loading]="generando()"
       (onClick)="generarMovimientos()"
     ></p-button>
-    <p-button
-      label="Añadir gasto fijo"
-      icon="pi pi-plus"
-      (onClick)="anadirGastoFijo()"
-    ></p-button>
+    <p-button label="Añadir gasto fijo" icon="pi pi-plus" (onClick)="anadirGastoFijo()"></p-button>
   </div>
 </div>
 
@@ -59,10 +53,7 @@
           ></p-button>
         </div>
 
-        <span
-          class="gasto-icon"
-          [style.backgroundColor]="categoria?.color || '#9ca3af'"
-        >
+        <span class="gasto-icon" [style.backgroundColor]="categoria?.color || '#9ca3af'">
           @if (categoria?.icono && categoria?.hasIcono) {
             <i [class]="categoria?.icono"></i>
           } @else {
