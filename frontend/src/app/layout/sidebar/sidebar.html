@@ -7,7 +7,7 @@
     </li>
     <li>
       <a routerLink="/resumen-mensual" routerLinkActive="active">
-        <i class="pi pi-chart-bar"></i><span>Resumén Mensual</span>
+        <i class="pi pi-chart-bar"></i><span>Resumen Mensual</span>
       </a>
     </li>
     <li>
@@ -20,12 +20,35 @@
         <i class="pi pi-money-bill"></i><span>Mis Bancos (Ahorros)</span>
       </a>
     </li>
-    
-    <li>
-      <a routerLink="/resumen-anual" routerLinkActive="active">
-        <i class="pi pi-chart-line"></i><span>Resumen anual</span>
-      </a>
+
+    <li class="menu-group">
+      <button
+        type="button"
+        class="menu-toggle"
+        (click)="toggleResumenAnual()"
+        [attr.aria-expanded]="resumenAnualOpen"
+      >
+        <span class="menu-toggle-left">
+          <i class="pi pi-chart-line"></i><span>Resumen anual</span>
+        </span>
+        <i class="pi pi-chevron-down menu-chevron" [ngClass]="{ open: resumenAnualOpen }"></i>
+      </button>
+      @if (resumenAnualOpen) {
+        <ul class="submenu">
+          <li>
+            <a routerLink="/resumen-anual/opcion1" routerLinkActive="active">
+              <span>Opción 1</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/resumen-anual/opcion2" routerLinkActive="active">
+              <span>Opción 2</span>
+            </a>
+          </li>
+        </ul>
+      }
     </li>
+
     <li>
       <a routerLink="/categorias" routerLinkActive="active">
         <i class="pi pi-tags"></i><span>Categorías</span>

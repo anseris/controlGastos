@@ -34,6 +34,16 @@ export const routes: Routes = [
           import('./features/resumen-anual/resumen-anual').then((m) => m.ResumenAnual),
       },
       {
+        path: 'resumen-anual/opcion1',
+        loadComponent: () =>
+          import('./features/resumen-anual/opcion1/opcion1').then((m) => m.Opcion1),
+      },
+      {
+        path: 'resumen-anual/opcion2',
+        loadComponent: () =>
+          import('./features/resumen-anual/opcion2/opcion2').then((m) => m.Opcion2),
+      },
+      {
         path: 'configuracion',
         loadComponent: () =>
           import('./features/configuracion/configuracion').then((m) => m.Configuracion),
@@ -42,3 +52,4 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: '' },
 ];
+

@@ -66,3 +66,62 @@
     padding: 9px 10px;
   }
 }
+
+/* Submenú Resumen anual */
+.menu-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  color: #4f5b7a;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-toggle:hover {
+  background: #f5f7fb;
+  color: #1f2937;
+}
+
+.menu-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-chevron {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.menu-chevron.open {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 4px 0 6px 28px;
+  list-style: none;
+}
+
+.submenu li a {
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.submenu li a.active {
+  background: #eef3ff;
+  color: #1d4ed8;
+}

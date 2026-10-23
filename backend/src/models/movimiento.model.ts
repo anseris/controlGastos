@@ -20,7 +20,7 @@ export interface IMovimiento {
   presupuestoClave: string;
   /**
    * Id del gasto fijo (`gastos_fijos`) que originó el movimiento.
-   * Cadena vac��a = movimiento manual.
+   * Cadena vacía = movimiento manual.
    */
   gastoFijoId: string;
 }
