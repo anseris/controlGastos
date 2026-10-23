@@ -3,15 +3,26 @@ import { Component, inject } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { MovimientosStore } from '../../../services/movimientos-store';
 import { DividerModule } from 'primeng/divider';
+import { ButtonModule } from 'primeng/button';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-resumen-mensual',
-  imports: [CardModule, CurrencyPipe, DecimalPipe, NgStyle, CommonModule, DividerModule],
+  imports: [
+    CardModule,
+    CurrencyPipe,
+    DecimalPipe,
+    NgStyle,
+    CommonModule,
+    DividerModule,
+    ButtonModule,
+  ],
   templateUrl: './resumen-mensual.html',
   styleUrl: './resumen-mensual.scss',
 })
 export class ResumenMensual {
   private readonly store = inject(MovimientosStore);
+  private router = inject(Router);
 
   readonly movimientos = this.store.movimientosFiltrados;
 
@@ -135,5 +146,9 @@ export class ResumenMensual {
       'deg)';
 
     return { background: fondo };
+  }
+
+  irAGastosFijos(): void {
+    this.router.navigate(['/gastos-fijos']);
   }
 }

@@ -9,6 +9,7 @@ import { NgClass } from '@angular/common';
   styleUrl: './sidebar.scss',
 })
 export class Sidebar {
+  menuAbierto: keyof Sidebar['menus'] | null = null;
   menus = {
     resumenAnual: false,
     categorias: false,
@@ -17,6 +18,17 @@ export class Sidebar {
   };
 
   toggleMenu(menu: keyof Sidebar['menus']): void {
-    this.menus[menu] = !this.menus[menu];
+    // Cierra todos los menús
+    Object.keys(this.menus).forEach((key) => {
+      this.menus[key as keyof Sidebar['menus']] = false;
+    });
+
+    // Si no estaba abierto, abre el seleccionado
+    if (this.menuAbierto !== menu) {
+      this.menus[menu] = true;
+      this.menuAbierto = menu;
+    } else {
+      this.menuAbierto = null;
+    }
   }
 }

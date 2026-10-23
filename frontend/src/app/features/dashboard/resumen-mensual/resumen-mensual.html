@@ -149,7 +149,6 @@
         <i class="pi pi-list"></i>
         <span>Comparativa con las cards</span>
       </div>
-      <!-- <span class="chart-subtitle">Saldo {{ balanceTotal | currency: 'EUR' }}</span> -->
     </div>
     <div class="h-bar-chart mt-3">
       <div class="h-bar-row">
@@ -198,6 +197,14 @@
         </div>
         <div class="h-bar-track">
           <div class="h-bar-fill fijos" [style.width.%]="barraPct(pctFijos)"></div>
+        </div>
+
+        <div class="mt-4 flex justify-content-end">
+          <p-button
+            label="Ir a Gastos Fijos"
+            icon="pi pi-thumbtack"
+            (onClick)="irAGastosFijos()"
+          ></p-button>
         </div>
       </div>
     </div>
