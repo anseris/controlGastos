@@ -20,6 +20,11 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({
       theme: {
         preset: Aura
+      },
+      translation: {
+        aria: {
+          navigation: 'Navegación principal'
+        }
       }
     }),
     MessageService,

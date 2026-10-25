@@ -1,19 +1,45 @@
 <section class="filter-row">
-    <div>
-      <label for="monthFilter">Periodo de análisis</label>
-      <p-select
-        inputId="monthFilter"
-        [options]="monthOptions()"
-        optionLabel="label"
-        optionValue="value"
-        [ngModel]="selectedMonth()"
-        (onChange)="onMesChange($event.value)"
-        placeholder="Selecciona un mes"
-        [filter]="false"
-        styleClass="month-select"
-      ></p-select>
-    </div>
-    <div class="period-note"><i class="pi pi-calendar"></i><span>{{ selectedMonth() === 'all' ? 'Todos los movimientos' : monthLabel(selectedMonth()) }}</span></div>
-    <div class="filter-spacer"></div>
-    <!-- <p-button label="Restaurar Excel de ejemplo" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="restoreExamples()"></p-button> -->
-  </section>
+  <div>
+    <label for="monthFilter">Periodo de análisis</label>
+    <p-select
+      inputId="monthFilter"
+      [options]="monthOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="selectedMonth()"
+      (onChange)="onMesChange($event.value)"
+      placeholder="Selecciona un mes"
+      [filter]="false"
+      styleClass="month-select"
+    ></p-select>
+  </div>
+  <div class="period-note">
+    <i class="pi pi-calendar"></i
+    ><span>{{
+      selectedMonth() === 'all' ? 'Todos los movimientos' : monthLabel(selectedMonth())
+    }}</span>
+  </div>
+  <div class="filter-spacer"></div>
+
+  <div class="top-actions">
+    <label class="import-button p-button p-component p-button-outlined" for="excelFile"
+      ><i class="pi pi-file-import"></i><span>Importar Excel</span></label
+    >
+    <input id="excelFile" class="visually-hidden" type="file" accept=".xlsx,.xls,.xlsm" />
+    <p-button
+      label="Exportar CSV"
+      icon="pi pi-download"
+      severity="secondary"
+      [outlined]="true"
+    ></p-button>
+    <p-button label="Nuevo movimiento" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+  </div>
+  <!-- <p-button label="Restaurar Excel de ejemplo" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="restoreExamples()"></p-button> -->
+</section>
+
+@if (showModalAddMovement) {
+  <app-add-movimiento
+    [showModalAddMovement]="showModalAddMovement"
+    (modalClosed)="returnCloseModal()"
+  ></app-add-movimiento>
+}
