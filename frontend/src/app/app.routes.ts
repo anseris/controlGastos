@@ -1,10 +1,19 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth-guard';
 import { MainLayout } from './layout/main-layout/main-layout';
 
 export const routes: Routes = [
+  // Acceso público: login y registro.
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/auth-page/auth-page').then((m) => m.AuthPage),
+  },
+
   {
     path: '',
     component: MainLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'movimientos' },
       // MOVIMIENTOS

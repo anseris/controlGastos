@@ -2,6 +2,8 @@ import { Schema, model } from 'mongoose';
 
 export interface IGastoFijo {
   _id: string;
+  /** Id del usuario propietario del gasto fijo. */
+  usuario: string;
   dia: number;
   descripcion: string;
   categoria: string;
@@ -22,6 +24,11 @@ export interface IGastoFijo {
 
 const gastoFijoSchema = new Schema<IGastoFijo>(
   {
+    usuario: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     dia: {
       type: Number,
       required: true,
@@ -70,5 +77,7 @@ const gastoFijoSchema = new Schema<IGastoFijo>(
     collection: 'gastos_fijos',
   }
 );
+
+gastoFijoSchema.index({ usuario: 1, dia: 1 });
 
 export const GastoFijo = model<IGastoFijo>('GastoFijo', gastoFijoSchema);

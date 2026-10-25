@@ -1,0 +1,62 @@
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: 6px;
+  padding: 5px 5px 5px 7px;
+  background: #fff;
+  border: 1px solid var(--line, #e9edf4);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(29, 41, 57, 0.04);
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #e9efff;
+  color: #4169e1;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.user-data {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 150px;
+  line-height: 1.25;
+}
+
+.user-data strong,
+.user-data small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-data strong {
+  color: #34415a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-data small {
+  color: #8b95a7;
+  font-size: 10px;
+}
+
+@media (max-width: 950px) {
+  .user-chip {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .user-data {
+    display: none;
+  }
+}

@@ -5,21 +5,25 @@ import {
   type ClavePresupuesto,
 } from '../models/presupuesto.model.js';
 import { CuentaBanco } from '../models/cuenta-banco.model.js';
+import { idUsuario } from '../middleware/auth.middleware.js';
 
 /**
- * Garantiza que existan los tres presupuestos base (Casa, Ahorro, Para mi).
- * Los que falten se crean con su porcentaje por defecto y sin categorías.
+ * Garantiza que el usuario tenga los tres presupuestos base
+ * (Casa, Ahorro, Para mi). Los que falten se crean con su porcentaje
+ * por defecto y sin categorías.
  */
-const asegurarPresupuestos = async () => {
-  const existentes = await Presupuesto.find();
+const asegurarPresupuestos = async (usuarioId: string) => {
+  const existentes = await Presupuesto.find({ usuario: usuarioId });
   const claves = new Set(existentes.map((p) => p.clave));
-  const faltantes = PRESUPUESTOS_POR_DEFECTO.filter((p) => !claves.has(p.clave));
+  const faltantes = PRESUPUESTOS_POR_DEFECTO.filter((p) => !claves.has(p.clave)).map(
+    (presupuesto) => ({ ...presupuesto, usuario: usuarioId })
+  );
 
   if (faltantes.length > 0) {
     await Presupuesto.insertMany(faltantes);
   }
 
-  return Presupuesto.find().sort({ orden: 1 });
+  return Presupuesto.find({ usuario: usuarioId }).sort({ orden: 1 });
 };
 
 /** Comprueba que un día del mes sea válido (entre 1 y 31). */
@@ -28,18 +32,18 @@ const esDiaValido = (dia: unknown): dia is number => {
   return Number.isInteger(numero) && numero >= 1 && numero <= 31;
 };
 
-/** Comprueba que la cuenta de ahorro destino exista (si se indica alguna). */
-const existeCuenta = async (clave: string): Promise<boolean> => {
+/** Comprueba que la cuenta de ahorro destino exista para ese usuario. */
+const existeCuenta = async (clave: string, usuarioId: string): Promise<boolean> => {
   if (!clave) {
     return true;
   }
-  return (await CuentaBanco.exists({ clave })) !== null;
+  return (await CuentaBanco.exists({ usuario: usuarioId, clave })) !== null;
 };
 
-// GET: listar los presupuestos (crea los que falten)
-export const getPresupuestos = async (_req: Request, res: Response): Promise<void> => {
+// GET: listar los presupuestos del usuario (crea los que falten)
+export const getPresupuestos = async (req: Request, res: Response): Promise<void> => {
   try {
-    const presupuestos = await asegurarPresupuestos();
+    const presupuestos = await asegurarPresupuestos(idUsuario(req));
     res.status(200).json(presupuestos);
   } catch (error) {
     console.error(error);
@@ -51,9 +55,10 @@ export const getPresupuestos = async (_req: Request, res: Response): Promise<voi
 export const updatePresupuesto = async (req: Request, res: Response): Promise<void> => {
   const clave = req.params['clave'] as ClavePresupuesto;
   const { porcentaje, categorias, diaTransferencia, cuentaTransferencia } = req.body ?? {};
+  const usuarioId = idUsuario(req);
 
   try {
-    const presupuesto = await Presupuesto.findOne({ clave });
+    const presupuesto = await Presupuesto.findOne({ clave, usuario: usuarioId });
 
     if (!presupuesto) {
       res.status(404).json({ mensaje: 'Presupuesto no encontrado' });
@@ -75,7 +80,7 @@ export const updatePresupuesto = async (req: Request, res: Response): Promise<vo
     }
     if (cuentaTransferencia !== undefined) {
       const cuenta = String(cuentaTransferencia ?? '').trim();
-      if (!(await existeCuenta(cuenta))) {
+      if (!(await existeCuenta(cuenta, usuarioId))) {
         res.status(400).json({ mensaje: 'La cuenta de ahorro seleccionada no existe' });
         return;
       }
@@ -91,9 +96,10 @@ export const updatePresupuesto = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// PUT: cambiar el día de traspaso de todos los presupuestos a la vez
+// PUT: cambiar el día de traspaso de todos los presupuestos del usuario
 export const updateDiaTransferencia = async (req: Request, res: Response): Promise<void> => {
   const { dia } = req.body ?? {};
+  const usuarioId = idUsuario(req);
 
   if (!esDiaValido(dia)) {
     res.status(400).json({ mensaje: 'El día de traspaso debe estar entre 1 y 31' });
@@ -101,9 +107,12 @@ export const updateDiaTransferencia = async (req: Request, res: Response): Promi
   }
 
   try {
-    await asegurarPresupuestos();
-    await Presupuesto.updateMany({}, { $set: { diaTransferencia: Number(dia) } });
-    const presupuestos = await Presupuesto.find().sort({ orden: 1 });
+    await asegurarPresupuestos(usuarioId);
+    await Presupuesto.updateMany(
+      { usuario: usuarioId },
+      { $set: { diaTransferencia: Number(dia) } }
+    );
+    const presupuestos = await Presupuesto.find({ usuario: usuarioId }).sort({ orden: 1 });
     res.status(200).json(presupuestos);
   } catch (error) {
     console.error(error);

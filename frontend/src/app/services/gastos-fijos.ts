@@ -1,12 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { finalize, map, of, tap, type Observable } from 'rxjs';
-
-/** Base de la API del backend (Express en el puerto 3000). */
-const url = window.location.href;
-const API_BASE = url.includes('localhost') ? 'http://localhost:3000/api' : 'https://controlgastos-8fb2.onrender.com/api';
-// const API_BASE = 'http://localhost:3000/api';
-// const API_BASE = 'https://controlgastos-8fb2.onrender.com/api';
+import { API_BASE } from '../core/api-base';
 
 /**
  * Documento de gasto fijo tal y como lo guarda el backend

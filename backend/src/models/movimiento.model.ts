@@ -2,6 +2,8 @@ import { Schema, model } from 'mongoose';
 
 export interface IMovimiento {
   _id: string;
+  /** Id del usuario propietario del movimiento. */
+  usuario: string;
   id: number;
   /** Fecha en formato string `aaaa-mm-dd`. */
   fecha: string;
@@ -44,6 +46,11 @@ const toFechaString = (value: unknown): string => {
 
 const movimientoSchema = new Schema<IMovimiento>(
   {
+    usuario: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     fecha: {
       type: String,
       required: true,
@@ -102,6 +109,8 @@ const movimientoSchema = new Schema<IMovimiento>(
     collection: 'movimientos'
   }
 );
+
+movimientoSchema.index({ usuario: 1, fecha: -1 });
 
 export const Movimiento = model<IMovimiento>(
   'Movimiento',

@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { finalize, map, of, tap, type Observable } from 'rxjs';
+import { API_BASE } from '../core/api-base';
 import {
   AmortizacionCuota,
   PrestamoCuadro,
@@ -16,12 +17,6 @@ export type {
 } from './amortizacion-prestamo-calculo';
 
 export { calcularEstadoPrestamo } from './amortizacion-prestamo-calculo';
-
-/** Base de la API del backend (Express en el puerto 3000). */
-const url = window.location.href;
-const API_BASE = url.includes('localhost') ? 'http://localhost:3000/api' : 'https://controlgastos-8fb2.onrender.com/api';
-// const API_BASE = 'http://localhost:3000/api';
-// const API_BASE = 'https://controlgastos-8fb2.onrender.com/api';
 
 /**
  * Llamadas al backend del cuadro de amortización del préstamo

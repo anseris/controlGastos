@@ -14,11 +14,11 @@ import { sincronizarMovimientoDelMes } from '../controllers/gastos-fijos.control
 /** Nombre del archivo Excel con el cuadro de amortización. */
 export const NOMBRE_ARCHIVO_CUADRO = 'CuadroDeAmortizacion.XLS';
 
-/** Cuota importada (sin `_id`). */
-type CuotaImportada = Omit<IAmortizacionCuota, '_id'>;
+/** Cuota importada (sin `_id` ni usuario: se asignan al guardar). */
+type CuotaImportada = Omit<IAmortizacionCuota, '_id' | 'usuario'>;
 
-/** Cabecera importada (sin `_id`). */
-type CuadroImportado = Omit<IPrestamoCuadro, '_id'>;
+/** Cabecera importada (sin `_id` ni usuario: se asignan al guardar). */
+type CuadroImportado = Omit<IPrestamoCuadro, '_id' | 'usuario'>;
 
 /** Normaliza un texto: minúsculas, sin acentos y con espacios colapsados. */
 const normalizar = (valor: unknown): string =>
@@ -325,16 +325,20 @@ export const cuotaParaReferencia = (
  * con la cuota del cuadro de amortización y actualiza su movimiento del mes.
  */
 export const sincronizarGastoFijoCuota = async (
+  usuarioId: string,
   referencia: Date = new Date()
 ): Promise<{ sincronizados: number; mensaje: string }> => {
-  const cuotas = await AmortizacionCuota.find().sort({ mes: 1 });
+  const cuotas = await AmortizacionCuota.find({ usuario: usuarioId }).sort({ mes: 1 });
   const cuota = cuotaParaReferencia(cuotas, referencia);
 
   if (!cuota) {
     return { sincronizados: 0, mensaje: 'No hay cuadro de amortización importado.' };
   }
 
-  const gastosFijos = await GastoFijo.find({ esCuotaPrestamo: true });
+  const gastosFijos = await GastoFijo.find({
+    usuario: usuarioId,
+    esCuotaPrestamo: true,
+  });
 
   if (gastosFijos.length === 0) {
     return {
@@ -367,19 +371,22 @@ export const sincronizarGastoFijoCuota = async (
  * anterior) y sincroniza el gasto fijo de la cuota.
  */
 export const importarCuadro = async (
+  usuarioId: string,
   contenido?: Buffer
 ): Promise<{ datos: CuadroImportado; cuotas: CuotaImportada[]; mensaje: string }> => {
   const buffer = contenido ?? leerArchivoProyecto();
 
   const { datos, cuotas } = parseCuadro(buffer);
 
-  await AmortizacionCuota.deleteMany({});
-  await AmortizacionCuota.insertMany(cuotas);
+  await AmortizacionCuota.deleteMany({ usuario: usuarioId });
+  await AmortizacionCuota.insertMany(
+    cuotas.map((cuota) => ({ ...cuota, usuario: usuarioId }))
+  );
 
-  await PrestamoCuadro.deleteMany({});
-  await PrestamoCuadro.create(datos);
+  await PrestamoCuadro.deleteMany({ usuario: usuarioId });
+  await PrestamoCuadro.create({ ...datos, usuario: usuarioId });
 
-  const sincronizacion = await sincronizarGastoFijoCuota();
+  const sincronizacion = await sincronizarGastoFijoCuota(usuarioId);
 
   return {
     datos,

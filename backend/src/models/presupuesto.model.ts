@@ -6,6 +6,8 @@ export type ClavePresupuesto = (typeof CLAVES_PRESUPUESTO)[number];
 
 export interface IPresupuesto {
   _id: string;
+  /** Id del usuario propietario del presupuesto. */
+  usuario: string;
   /** Identificador fijo: casa | ahorro | para-mi. */
   clave: ClavePresupuesto;
   nombre: string;
@@ -28,7 +30,7 @@ export const DIA_TRANSFERENCIA_POR_DEFECTO = 25;
  * Presupuestos que se crean automáticamente la primera vez.
  * El porcentaje por defecto es 33,3 % de los ingresos del mes.
  */
-export const PRESUPUESTOS_POR_DEFECTO: Array<Omit<IPresupuesto, '_id'>> = [
+export const PRESUPUESTOS_POR_DEFECTO: Array<Omit<IPresupuesto, '_id' | 'usuario'>> = [
   {
     clave: 'casa',
     nombre: 'Casa',
@@ -60,10 +62,10 @@ export const PRESUPUESTOS_POR_DEFECTO: Array<Omit<IPresupuesto, '_id'>> = [
 
 const presupuestoSchema = new Schema<IPresupuesto>(
   {
+    usuario: { type: String, required: true, trim: true },
     clave: {
       type: String,
       required: true,
-      unique: true,
       enum: [...CLAVES_PRESUPUESTO],
     },
     nombre: { type: String, required: true, trim: true },
@@ -80,5 +82,8 @@ const presupuestoSchema = new Schema<IPresupuesto>(
   },
   { timestamps: true, collection: 'presupuestos' }
 );
+
+// Cada usuario tiene sus propios presupuestos casa/ahorro/para-mi.
+presupuestoSchema.index({ usuario: 1, clave: 1 }, { unique: true });
 
 export const Presupuesto = model<IPresupuesto>('Presupuesto', presupuestoSchema);

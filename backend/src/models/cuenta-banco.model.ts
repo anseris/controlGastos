@@ -6,6 +6,8 @@ export type TipoCuentaBanco = (typeof TIPOS_CUENTA_BANCO)[number];
 
 export interface ICuentaBanco {
   _id: string;
+  /** Id del usuario propietario de la cuenta. */
+  usuario: string;
   /**
    * Identificador estable que se guarda en `movimiento.tipoAhorro`.
    * No cambia aunque se renombre la cuenta.
@@ -31,7 +33,7 @@ export interface ICuentaBanco {
  * Cuentas que se crean automáticamente la primera vez.
  * Las claves coinciden con los valores históricos de `movimiento.tipoAhorro`.
  */
-export const CUENTAS_BANCO_POR_DEFECTO: Array<Omit<ICuentaBanco, '_id'>> = [
+export const CUENTAS_BANCO_POR_DEFECTO: Array<Omit<ICuentaBanco, '_id' | 'usuario'>> = [
   {
     clave: 'ing',
     nombre: 'ING Ahorro',
@@ -69,7 +71,8 @@ export const CUENTAS_BANCO_POR_DEFECTO: Array<Omit<ICuentaBanco, '_id'>> = [
 
 const cuentaBancoSchema = new Schema<ICuentaBanco>(
   {
-    clave: { type: String, required: true, unique: true, trim: true },
+    usuario: { type: String, required: true, trim: true },
+    clave: { type: String, required: true, trim: true },
     nombre: { type: String, required: true, trim: true },
     tipo: {
       type: String,
@@ -86,5 +89,8 @@ const cuentaBancoSchema = new Schema<ICuentaBanco>(
   },
   { timestamps: true, collection: 'cuentas-banco' }
 );
+
+// La clave es única dentro de las cuentas de cada usuario.
+cuentaBancoSchema.index({ usuario: 1, clave: 1 }, { unique: true });
 
 export const CuentaBanco = model<ICuentaBanco>('CuentaBanco', cuentaBancoSchema);

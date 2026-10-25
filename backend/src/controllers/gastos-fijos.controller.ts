@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { GastoFijo, type IGastoFijo } from '../models/gasto-fijo.model.js';
 import { Movimiento } from '../models/movimiento.model.js';
+import { idUsuario } from '../middleware/auth.middleware.js';
 
 /** Detecta el error de índice único de MongoDB. */
 const esNombreDuplicado = (error: unknown): boolean =>
@@ -8,10 +9,13 @@ const esNombreDuplicado = (error: unknown): boolean =>
   error !== null &&
   (error as { code?: number }).code === 11000;
 
-// GET: listar todos los gastos fijos
-export const getGastosFijos = async (_req: Request, res: Response): Promise<void> => {
+// GET: listar todos los gastos fijos del usuario
+export const getGastosFijos = async (req: Request, res: Response): Promise<void> => {
   try {
-    const gastosFijos = await GastoFijo.find().sort({ dia: 1, descripcion: 1 });
+    const gastosFijos = await GastoFijo.find({ usuario: idUsuario(req) }).sort({
+      dia: 1,
+      descripcion: 1,
+    });
     res.status(200).json(gastosFijos);
   } catch (error) {
     console.error(error);
@@ -19,10 +23,13 @@ export const getGastosFijos = async (_req: Request, res: Response): Promise<void
   }
 };
 
-// GET: obtener un gasto fijo por su ID
+// GET: obtener un gasto fijo del usuario por su ID
 export const getGastoFijoById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const gastoFijo = await GastoFijo.findById(req.params['id']);
+    const gastoFijo = await GastoFijo.findOne({
+      _id: req.params['id'],
+      usuario: idUsuario(req),
+    });
 
     if (!gastoFijo) {
       res.status(404).json({ mensaje: 'Gasto fijo no encontrado' });
@@ -39,7 +46,10 @@ export const getGastoFijoById = async (req: Request, res: Response): Promise<voi
 // POST: crear un gasto fijo
 export const createGastoFijo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const gastoFijo = await GastoFijo.create(req.body);
+    const gastoFijo = await GastoFijo.create({
+      ...req.body,
+      usuario: idUsuario(req),
+    });
 
     // Se genera ya su movimiento en el mes actual para que aparezca en la tabla.
     await sincronizarMovimientoDelMes(gastoFijo, new Date());
@@ -55,13 +65,17 @@ export const createGastoFijo = async (req: Request, res: Response): Promise<void
   }
 };
 
-// PUT: modificar un gasto fijo
+// PUT: modificar un gasto fijo del usuario
 export const updateGastoFijo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const gastoFijo = await GastoFijo.findByIdAndUpdate(req.params['id'], req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const gastoFijo = await GastoFijo.findOneAndUpdate(
+      { _id: req.params['id'], usuario: idUsuario(req) },
+      { ...req.body, usuario: idUsuario(req) },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!gastoFijo) {
       res.status(404).json({ mensaje: 'Gasto fijo no encontrado' });
@@ -82,10 +96,14 @@ export const updateGastoFijo = async (req: Request, res: Response): Promise<void
   }
 };
 
-// DELETE: eliminar un gasto fijo
+// DELETE: eliminar un gasto fijo del usuario
 export const deleteGastoFijo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const gastoFijo = await GastoFijo.findByIdAndDelete(req.params['id']);
+    const usuarioId = idUsuario(req);
+    const gastoFijo = await GastoFijo.findOneAndDelete({
+      _id: req.params['id'],
+      usuario: usuarioId,
+    });
 
     if (!gastoFijo) {
       res.status(404).json({ mensaje: 'Gasto fijo no encontrado' });
@@ -95,6 +113,7 @@ export const deleteGastoFijo = async (req: Request, res: Response): Promise<void
     // Se eliminan los movimientos que generó este gasto fijo.
     const { deletedCount } = await Movimiento.deleteMany({
       gastoFijoId: String(gastoFijo._id),
+      usuario: usuarioId,
     });
 
     res.status(200).json({
@@ -108,9 +127,12 @@ export const deleteGastoFijo = async (req: Request, res: Response): Promise<void
 };
 
 // POST: generar manualmente los movimientos del mes actual
-export const generarMovimientosGastosFijos = async (_req: Request, res: Response): Promise<void> => {
+export const generarMovimientosGastosFijos = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    const resultado = await generarGastosFijosDelMes(new Date());
+    const resultado = await generarGastosFijosDelMes(new Date(), idUsuario(req));
 
     res.status(200).json({
       mensaje:
@@ -128,12 +150,22 @@ export const generarMovimientosGastosFijos = async (_req: Request, res: Response
 /**
  * Crea en la tabla de movimientos los gastos fijos activos que todavía no
  * tengan movimiento en el mes indicado. La fecha usa el día configurado,
- * ajustado al último día del mes cuando el mes es más corto (p. ej. el 31).
+ * ajustado al último día del mes cuando el mes es más corto.
+ *
+ * Sin `usuarioId` recorre los gastos fijos de todos los usuarios (lo usa el
+ * planificador); con `usuarioId` solo los de ese usuario.
  */
 export const generarGastosFijosDelMes = async (
-  referencia: Date
+  referencia: Date,
+  usuarioId?: string
 ): Promise<{ generados: number; movimientos: unknown[] }> => {
-  const gastosFijos = await GastoFijo.find({ activo: true });
+  const filtro: Record<string, unknown> = { activo: true };
+
+  if (usuarioId) {
+    filtro['usuario'] = usuarioId;
+  }
+
+  const gastosFijos = await GastoFijo.find(filtro);
   const movimientos: unknown[] = [];
 
   if (gastosFijos.length === 0) {
@@ -189,6 +221,7 @@ const buscarMovimientoDelMes = async (
   fecha: string
 ) => {
   const porId = await Movimiento.findOne({
+    usuario: gastoFijo.usuario,
     gastoFijoId: String(gastoFijo._id),
     fecha: { $regex: `^${prefijoMes}` },
   });
@@ -199,6 +232,7 @@ const buscarMovimientoDelMes = async (
 
   // Movimiento equivalente creado a mano: se queda enlazado al gasto fijo.
   const equivalente = await Movimiento.findOne({
+    usuario: gastoFijo.usuario,
     gastoFijoId: '',
     descripcion: gastoFijo.descripcion,
     fecha,
@@ -224,6 +258,7 @@ const crearMovimientoDesdeGastoFijo = async (
   const fecha = fechaDelGastoFijo(gastoFijo, referencia);
 
   return Movimiento.create({
+    usuario: gastoFijo.usuario,
     fecha,
     descripcion: gastoFijo.descripcion,
     categoria: gastoFijo.categoria,
@@ -258,7 +293,10 @@ export const sincronizarMovimientoDelMes = async (
   if (existente) {
     // Si el gasto fijo se ha desactivado, se borra su movimiento del mes.
     if (!gastoFijo.activo) {
-      await Movimiento.deleteOne({ _id: existente._id });
+      await Movimiento.deleteOne({
+        _id: existente._id,
+        usuario: gastoFijo.usuario,
+      });
       return;
     }
 

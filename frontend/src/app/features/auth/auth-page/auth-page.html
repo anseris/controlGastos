@@ -1,0 +1,226 @@
+<div class="auth-shell">
+  <section class="auth-brand">
+    <div class="brand-mark"><i class="pi pi-wallet"></i></div>
+    <p class="eyebrow">FINANZAS PERSONALES</p>
+    <h1>Control de gastos</h1>
+    <p class="lead">
+      Ingresos, gastos, presupuestos y ahorro en un solo lugar. Entra para ver tu
+      situación financiera al detalle.
+    </p>
+
+    <ul class="brand-benefits">
+      <li><i class="pi pi-chart-line"></i><span>Resúmenes mensuales y anuales</span></li>
+      <li><i class="pi pi-wallet"></i><span>Control de cuentas y préstamos</span></li>
+      <li><i class="pi pi-shield"></i><span>Tus datos, siempre privados</span></li>
+    </ul>
+
+    <p class="brand-foot"><i class="pi pi-lock"></i> Acceso protegido con sesión segura</p>
+  </section>
+
+  <section class="auth-panel">
+    <div class="auth-card">
+      <div class="auth-tabs" role="tablist" aria-label="Acceso">
+        <button
+          type="button"
+          role="tab"
+          [class.active]="modo === 'login'"
+          [attr.aria-selected]="modo === 'login'"
+          (click)="cambiarModo('login')"
+        >
+          Entrar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.active]="modo === 'registro'"
+          [attr.aria-selected]="modo === 'registro'"
+          (click)="cambiarModo('registro')"
+        >
+          Crear cuenta
+        </button>
+      </div>
+
+      @if (modo === 'login') {
+        <div class="auth-heading">
+          <h2>Bienvenido de nuevo</h2>
+          <p>Inicia sesión para acceder a tus finanzas.</p>
+        </div>
+
+        <form class="auth-form" (ngSubmit)="iniciarSesion()" novalidate>
+          <div class="auth-field">
+            <label for="loginEmail">Correo electrónico</label>
+            <input
+              id="loginEmail"
+              name="loginEmail"
+              type="email"
+              pInputText
+              [(ngModel)]="formLogin.email"
+              autocomplete="email"
+              placeholder="tu@correo.com"
+              class="auth-input"
+            />
+            @if (submitted && !formLogin.email.trim()) {
+              <small class="field-error">Introduce tu correo electrónico.</small>
+            } @else if (submitted && !formLogin.email.includes('@')) {
+              <small class="field-error">El correo no parece válido.</small>
+            }
+          </div>
+
+          <div class="auth-field">
+            <label for="loginPassword">Contraseña</label>
+            <div class="password-wrap">
+              <input
+                id="loginPassword"
+                name="loginPassword"
+                [type]="mostrarPasswordLogin ? 'text' : 'password'"
+                pInputText
+                [(ngModel)]="formLogin.password"
+                autocomplete="current-password"
+                placeholder="Tu contraseña"
+                class="auth-input"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                (click)="mostrarPasswordLogin = !mostrarPasswordLogin"
+                [attr.aria-label]="mostrarPasswordLogin ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                <i [class]="mostrarPasswordLogin ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+              </button>
+            </div>
+            @if (submitted && !formLogin.password) {
+              <small class="field-error">Introduce tu contraseña.</small>
+            }
+          </div>
+
+          @if (error) {
+            <div class="auth-error">
+              <i class="pi pi-exclamation-circle"></i>
+              <span>{{ error }}</span>
+            </div>
+          }
+
+          <button type="submit" class="auth-submit" [disabled]="cargando">
+            @if (cargando) {
+              <i class="pi pi-spin pi-spinner"></i>
+            } @else {
+              <i class="pi pi-sign-in"></i>
+            }
+            <span>{{ cargando ? 'Entrando…' : 'Iniciar sesión' }}</span>
+          </button>
+
+          <p class="auth-switch">
+            ¿Aún no tienes cuenta?
+            <button type="button" (click)="cambiarModo('registro')">Crear una gratis</button>
+          </p>
+        </form>
+      } @else {
+        <div class="auth-heading">
+          <h2>Crea tu cuenta</h2>
+          <p>Empieza a controlar tus gastos en menos de un minuto.</p>
+        </div>
+
+        <form class="auth-form" (ngSubmit)="crearCuenta()" novalidate>
+          <div class="auth-field">
+            <label for="registroNombre">Nombre</label>
+            <input
+              id="registroNombre"
+              name="registroNombre"
+              type="text"
+              pInputText
+              [(ngModel)]="formRegistro.nombre"
+              autocomplete="name"
+              placeholder="Tu nombre"
+              class="auth-input"
+            />
+            @if (submitted && formRegistro.nombre.trim().length < 2) {
+              <small class="field-error">Introduce tu nombre.</small>
+            }
+          </div>
+
+          <div class="auth-field">
+            <label for="registroEmail">Correo electrónico</label>
+            <input
+              id="registroEmail"
+              name="registroEmail"
+              type="email"
+              pInputText
+              [(ngModel)]="formRegistro.email"
+              autocomplete="email"
+              placeholder="tu@correo.com"
+              class="auth-input"
+            />
+            @if (submitted && !formRegistro.email.includes('@')) {
+              <small class="field-error">Introduce un correo electrónico válido.</small>
+            }
+          </div>
+
+          <div class="auth-field">
+            <label for="registroPassword">Contraseña</label>
+            <div class="password-wrap">
+              <input
+                id="registroPassword"
+                name="registroPassword"
+                [type]="mostrarPasswordRegistro ? 'text' : 'password'"
+                pInputText
+                [(ngModel)]="formRegistro.password"
+                autocomplete="new-password"
+                placeholder="Mínimo 6 caracteres"
+                class="auth-input"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                (click)="mostrarPasswordRegistro = !mostrarPasswordRegistro"
+                [attr.aria-label]="mostrarPasswordRegistro ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                <i [class]="mostrarPasswordRegistro ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+              </button>
+            </div>
+            @if (submitted && formRegistro.password.length < passwordMinLength) {
+              <small class="field-error">La contraseña debe tener al menos {{ passwordMinLength }} caracteres.</small>
+            }
+          </div>
+
+          <div class="auth-field">
+            <label for="registroConfirmar">Repite la contraseña</label>
+            <input
+              id="registroConfirmar"
+              name="registroConfirmar"
+              [type]="mostrarPasswordRegistro ? 'text' : 'password'"
+              pInputText
+              [(ngModel)]="formRegistro.confirmar"
+              autocomplete="new-password"
+              placeholder="Repite tu contraseña"
+              class="auth-input"
+            />
+            @if (submitted && formRegistro.confirmar !== formRegistro.password) {
+              <small class="field-error">Las contraseñas no coinciden.</small>
+            }
+          </div>
+
+          @if (error) {
+            <div class="auth-error">
+              <i class="pi pi-exclamation-circle"></i>
+              <span>{{ error }}</span>
+            </div>
+          }
+
+          <button type="submit" class="auth-submit" [disabled]="cargando">
+            @if (cargando) {
+              <i class="pi pi-spin pi-spinner"></i>
+            } @else {
+              <i class="pi pi-user-plus"></i>
+            }
+            <span>{{ cargando ? 'Creando cuenta…' : 'Crear cuenta' }}</span>
+          </button>
+
+          <p class="auth-switch">
+            ¿Ya tienes cuenta?
+            <button type="button" (click)="cambiarModo('login')">Iniciar sesión</button>
+          </p>
+        </form>
+      }
+    </div>
+  </section>
+</div>

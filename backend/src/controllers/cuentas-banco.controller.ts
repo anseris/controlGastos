@@ -3,26 +3,27 @@ import {
   CUENTAS_BANCO_POR_DEFECTO,
   CuentaBanco,
 } from '../models/cuenta-banco.model.js';
+import { idUsuario } from '../middleware/auth.middleware.js';
 
 /**
- * Garantiza que existan las cuentas base (ING, Revolut y Préstamo).
- * Las que falten se crean con sus valores por defecto; las existentes no se
+ * Garantiza que el usuario tenga las cuentas base (ING, Revolut y Préstamo).
+ * Las que falten se crean con saldo inicial 0; las existentes no se
  * sobreescriben para conservar los cambios hechos desde la interfaz.
  */
-const asegurarCuentasBase = async (): Promise<void> => {
+const asegurarCuentasBase = async (usuarioId: string): Promise<void> => {
   await Promise.all(
     CUENTAS_BANCO_POR_DEFECTO.map((cuenta) =>
       CuentaBanco.updateOne(
-        { clave: cuenta.clave },
-        { $setOnInsert: cuenta },
+        { usuario: usuarioId, clave: cuenta.clave },
+        { $setOnInsert: { ...cuenta, usuario: usuarioId, saldoOrigen: 0 } },
         { upsert: true }
       )
     )
   );
 };
 
-/** Convierte un nombre en una clave legible y única. */
-const generarClave = async (nombre: string): Promise<string> => {
+/** Convierte un nombre en una clave legible y única para ese usuario. */
+const generarClave = async (nombre: string, usuarioId: string): Promise<string> => {
   const base =
     String(nombre ?? '')
       .normalize('NFD')
@@ -34,7 +35,7 @@ const generarClave = async (nombre: string): Promise<string> => {
   let clave = base;
   let contador = 2;
 
-  while (await CuentaBanco.exists({ clave })) {
+  while (await CuentaBanco.exists({ usuario: usuarioId, clave })) {
     clave = `${base}-${contador}`;
     contador += 1;
   }
@@ -42,17 +43,23 @@ const generarClave = async (nombre: string): Promise<string> => {
   return clave;
 };
 
-/** Siguiente orden de presentación. */
-const siguienteOrden = async (): Promise<number> => {
-  const ultima = await CuentaBanco.findOne().sort({ orden: -1 }).select('orden');
+/** Siguiente orden de presentación dentro de las cuentas del usuario. */
+const siguienteOrden = async (usuarioId: string): Promise<number> => {
+  const ultima = await CuentaBanco.findOne({ usuario: usuarioId })
+    .sort({ orden: -1 })
+    .select('orden');
   return (ultima?.orden ?? 0) + 1;
 };
 
-// GET: listar las cuentas (crea las cuentas base si faltan)
-export const getCuentasBanco = async (_req: Request, res: Response): Promise<void> => {
+// GET: listar las cuentas del usuario (crea las cuentas base si faltan)
+export const getCuentasBanco = async (req: Request, res: Response): Promise<void> => {
   try {
-    await asegurarCuentasBase();
-    const cuentas = await CuentaBanco.find().sort({ orden: 1, createdAt: 1 });
+    const usuarioId = idUsuario(req);
+    await asegurarCuentasBase(usuarioId);
+    const cuentas = await CuentaBanco.find({ usuario: usuarioId }).sort({
+      orden: 1,
+      createdAt: 1,
+    });
     res.status(200).json(cuentas);
   } catch (error) {
     console.error(error);
@@ -60,10 +67,13 @@ export const getCuentasBanco = async (_req: Request, res: Response): Promise<voi
   }
 };
 
-// GET: obtener una cuenta por su ID
+// GET: obtener una cuenta del usuario por su ID
 export const getCuentaBancoById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const cuenta = await CuentaBanco.findById(req.params['id']);
+    const cuenta = await CuentaBanco.findOne({
+      _id: req.params['id'],
+      usuario: idUsuario(req),
+    });
 
     if (!cuenta) {
       res.status(404).json({ mensaje: 'Cuenta no encontrada' });
@@ -80,10 +90,12 @@ export const getCuentaBancoById = async (req: Request, res: Response): Promise<v
 // POST: crear una cuenta
 export const createCuentaBanco = async (req: Request, res: Response): Promise<void> => {
   try {
+    const usuarioId = idUsuario(req);
     const { nombre, tipo, saldoOrigen, color, icono } = req.body ?? {};
 
     const cuenta = await CuentaBanco.create({
-      clave: await generarClave(nombre),
+      usuario: usuarioId,
+      clave: await generarClave(nombre, usuarioId),
       nombre,
       tipo,
       saldoOrigen,
@@ -91,7 +103,7 @@ export const createCuentaBanco = async (req: Request, res: Response): Promise<vo
       icono,
       multiplicador: 1,
       fija: false,
-      orden: await siguienteOrden(),
+      orden: await siguienteOrden(usuarioId),
     });
 
     res.status(201).json(cuenta);
@@ -101,7 +113,7 @@ export const createCuentaBanco = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// PUT: modificar una cuenta
+// PUT: modificar una cuenta del usuario
 export const updateCuentaBanco = async (req: Request, res: Response): Promise<void> => {
   try {
     const { nombre, tipo, saldoOrigen, color, icono } = req.body ?? {};
@@ -113,10 +125,14 @@ export const updateCuentaBanco = async (req: Request, res: Response): Promise<vo
     if (color !== undefined) cambios['color'] = color;
     if (icono !== undefined) cambios['icono'] = icono;
 
-    const cuenta = await CuentaBanco.findByIdAndUpdate(req.params['id'], cambios, {
-      new: true,
-      runValidators: true,
-    });
+    const cuenta = await CuentaBanco.findOneAndUpdate(
+      { _id: req.params['id'], usuario: idUsuario(req) },
+      cambios,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!cuenta) {
       res.status(404).json({ mensaje: 'Cuenta no encontrada' });
@@ -133,7 +149,10 @@ export const updateCuentaBanco = async (req: Request, res: Response): Promise<vo
 // DELETE: eliminar una cuenta propia (las cuentas base no se pueden borrar)
 export const deleteCuentaBanco = async (req: Request, res: Response): Promise<void> => {
   try {
-    const cuenta = await CuentaBanco.findById(req.params['id']);
+    const cuenta = await CuentaBanco.findOne({
+      _id: req.params['id'],
+      usuario: idUsuario(req),
+    });
 
     if (!cuenta) {
       res.status(404).json({ mensaje: 'Cuenta no encontrada' });

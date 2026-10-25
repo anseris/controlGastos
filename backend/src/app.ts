@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import authRoutes from "./routes/auth.routes.js";
+import { requireAuth } from "./middleware/auth.middleware.js";
 import movimientosRoutes from "./routes/movimientos.routes.js";
 import categoriasRoutes from "./routes/categorias.routes.js";
 import presupuestosRoutes from "./routes/presupuestos.routes.js";
@@ -13,6 +15,8 @@ app.use(
     origin: [
       "http://localhost:4200",
       "http://localhost:62187",
+      "http://127.0.0.1:4200",
+      "http://127.0.0.1:62187",
       "https://control-gastos.anseris51-2f5.workers.dev",
     ],
   }),
@@ -27,11 +31,12 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-app.use("/api/movimientos", movimientosRoutes);
-app.use("/api/categorias", categoriasRoutes);
-app.use("/api/presupuestos", presupuestosRoutes);
-app.use("/api/cuentas-banco", cuentasBancoRoutes);
-app.use("/api/gastos-fijos", gastosFijosRoutes);
-app.use("/api/amortizacion-prestamo", amortizacionPrestamoRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/movimientos", requireAuth, movimientosRoutes);
+app.use("/api/categorias", requireAuth, categoriasRoutes);
+app.use("/api/presupuestos", requireAuth, presupuestosRoutes);
+app.use("/api/cuentas-banco", requireAuth, cuentasBancoRoutes);
+app.use("/api/gastos-fijos", requireAuth, gastosFijosRoutes);
+app.use("/api/amortizacion-prestamo", requireAuth, amortizacionPrestamoRoutes);
 
 export default app;

@@ -6,7 +6,9 @@ export type TipoCategoria = (typeof TIPOS_CATEGORIA)[number];
 
 const categoriaSchema = new Schema(
   {
-    nombre: { type: String, required: true, trim: true, unique: true },
+    /** Id del usuario propietario de la categoría. */
+    usuario: { type: String, required: true, trim: true },
+    nombre: { type: String, required: true, trim: true },
     tipo: {
       type: String,
       enum: [...TIPOS_CATEGORIA],
@@ -22,6 +24,9 @@ const categoriaSchema = new Schema(
   },
   { timestamps: true, collection: 'categorias' }
 );
+
+// Cada usuario puede tener su propia categoría con el mismo nombre.
+categoriaSchema.index({ usuario: 1, nombre: 1 }, { unique: true });
 
 export type Categoria = InferSchemaType<typeof categoriaSchema>;
 

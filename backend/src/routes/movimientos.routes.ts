@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { Movimiento } from '../models/movimiento.model.js';
+import { idUsuario } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// GET: consultar todos los movimientos
-router.get('/', async (_req, res) => {
+// GET: consultar los movimientos del usuario autenticado
+router.get('/', async (req, res) => {
   try {
-    const movimientos = await Movimiento.find().sort({ fecha: -1 });
+    const movimientos = await Movimiento.find({ usuario: idUsuario(req) }).sort({ fecha: -1 });
     res.json(movimientos);
   } catch (error) {
     console.error(error);
@@ -14,10 +15,13 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// GET: consultar un movimiento por su ID
+// GET: consultar un movimiento del usuario por su ID
 router.get('/:id', async (req, res) => {
   try {
-    const movimiento = await Movimiento.findById(req.params['id']);
+    const movimiento = await Movimiento.findOne({
+      _id: req.params['id'],
+      usuario: idUsuario(req),
+    });
 
     if (!movimiento) {
       res.status(404).json({ mensaje: 'Movimiento no encontrado' });
@@ -31,10 +35,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST: crear un movimiento
+// POST: crear un movimiento para el usuario autenticado
 router.post('/', async (req, res) => {
   try {
-    const movimiento = await Movimiento.create(req.body);
+    const movimiento = await Movimiento.create({
+      ...req.body,
+      usuario: idUsuario(req),
+    });
     res.status(201).json(movimiento);
   } catch (error) {
     console.error(error);
@@ -42,12 +49,12 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT: modificar un movimiento
+// PUT: modificar un movimiento del usuario
 router.put('/:id', async (req, res) => {
   try {
-    const movimiento = await Movimiento.findByIdAndUpdate(
-      req.params['id'],
-      req.body,
+    const movimiento = await Movimiento.findOneAndUpdate(
+      { _id: req.params['id'], usuario: idUsuario(req) },
+      { ...req.body, usuario: idUsuario(req) },
       { new: true, runValidators: true }
     );
 
@@ -63,10 +70,13 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE: eliminar un movimiento
+// DELETE: eliminar un movimiento del usuario
 router.delete('/:id', async (req, res) => {
   try {
-    const movimiento = await Movimiento.findByIdAndDelete(req.params['id']);
+    const movimiento = await Movimiento.findOneAndDelete({
+      _id: req.params['id'],
+      usuario: idUsuario(req),
+    });
 
     if (!movimiento) {
       res.status(404).json({ mensaje: 'Movimiento no encontrado' });

@@ -10,6 +10,23 @@
       <input id="excelFile" class="visually-hidden" type="file" accept=".xlsx,.xls,.xlsm">
       <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true" ></p-button>
       <p-button label="Nuevo movimiento" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+
+      <div class="user-chip">
+        <span class="user-avatar">{{ inicial() }}</span>
+        <div class="user-data">
+          <strong>{{ usuario()?.nombre }}</strong>
+          <small>{{ usuario()?.email }}</small>
+        </div>
+        <p-button
+          icon="pi pi-sign-out"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          ariaLabel="Cerrar sesión"
+          title="Cerrar sesión"
+          (onClick)="cerrarSesion()"
+        ></p-button>
+      </div>
     </div>
   </header>
   @if (showModalAddMovement) {

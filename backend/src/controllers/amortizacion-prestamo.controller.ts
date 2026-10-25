@@ -8,13 +8,15 @@ import {
   importarCuadro,
   sincronizarGastoFijoCuota,
 } from '../services/amortizacion-prestamo.service.js';
+import { idUsuario } from '../middleware/auth.middleware.js';
 
 /** GET: devuelve la cabecera y las cuotas del cuadro de amortización. */
-export const getCuadro = async (_req: Request, res: Response): Promise<void> => {
+export const getCuadro = async (req: Request, res: Response): Promise<void> => {
   try {
+    const usuarioId = idUsuario(req);
     const [datos, cuotas] = await Promise.all([
-      PrestamoCuadro.findOne().sort({ createdAt: -1 }),
-      AmortizacionCuota.find().sort({ mes: 1 }),
+      PrestamoCuadro.findOne({ usuario: usuarioId }).sort({ createdAt: -1 }),
+      AmortizacionCuota.find({ usuario: usuarioId }).sort({ mes: 1 }),
     ]);
 
     res.status(200).json({
@@ -50,7 +52,7 @@ export const importarCuadroAmortizacion = async (
       contenido = Buffer.from(base64, 'base64');
     }
 
-    const resultado = await importarCuadro(contenido);
+    const resultado = await importarCuadro(idUsuario(req), contenido);
 
     res.status(200).json({
       mensaje: resultado.mensaje,
@@ -66,9 +68,9 @@ export const importarCuadroAmortizacion = async (
 };
 
 /** POST: sincroniza el importe del gasto fijo de la cuota con el cuadro. */
-export const sincronizarCuota = async (_req: Request, res: Response): Promise<void> => {
+export const sincronizarCuota = async (req: Request, res: Response): Promise<void> => {
   try {
-    const resultado = await sincronizarGastoFijoCuota();
+    const resultado = await sincronizarGastoFijoCuota(idUsuario(req));
 
     res.status(200).json({
       mensaje: resultado.mensaje,

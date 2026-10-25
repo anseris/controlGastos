@@ -9,6 +9,8 @@ import { Schema, model } from 'mongoose';
  */
 export interface IPrestamoCuadro {
   _id: string;
+  /** Id del usuario propietario del cuadro. */
+  usuario: string;
   /** Descripción del préstamo (p. ej. 'Préstamo Naranja'). */
   descripcion: string;
   /** Número de cuenta del préstamo. */
@@ -39,6 +41,8 @@ export interface IPrestamoCuadro {
  */
 export interface IAmortizacionCuota {
   _id: string;
+  /** Id del usuario propietario de la cuota. */
+  usuario: string;
   /** Número de cuota del préstamo (60, 61, 62...). */
   mes: number;
   /** Fecha del cargo (aaaa-mm-dd). */
@@ -55,6 +59,7 @@ export interface IAmortizacionCuota {
 
 const prestamoCuadroSchema = new Schema<IPrestamoCuadro>(
   {
+    usuario: { type: String, required: true, trim: true },
     descripcion: { type: String, trim: true, default: 'Préstamo' },
     cuenta: { type: String, trim: true, default: '' },
     titular: { type: String, trim: true, default: '' },
@@ -73,6 +78,7 @@ const prestamoCuadroSchema = new Schema<IPrestamoCuadro>(
 
 const amortizacionCuotaSchema = new Schema<IAmortizacionCuota>(
   {
+    usuario: { type: String, required: true, trim: true },
     mes: { type: Number, required: true, min: 0 },
     fecha: { type: String, required: true, trim: true },
     amortizacionCapital: { type: Number, required: true, min: 0, default: 0 },
@@ -85,6 +91,8 @@ const amortizacionCuotaSchema = new Schema<IAmortizacionCuota>(
     collection: 'amortizacion_prestamo',
   }
 );
+
+amortizacionCuotaSchema.index({ usuario: 1, mes: 1 });
 
 export const PrestamoCuadro = model<IPrestamoCuadro>(
   'PrestamoCuadro',
