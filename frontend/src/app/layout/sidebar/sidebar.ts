@@ -1,6 +1,9 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { MenubarModule } from 'primeng/menubar';
+import { Menubar, MenubarModule } from 'primeng/menubar';
+
+/** Margen para pasar del elemento padre al submenú sin que se cierre. */
+const AUTO_HIDE_DELAY = 300;
 
 @Component({
   selector: 'app-sidebar',
@@ -9,7 +12,41 @@ import { MenubarModule } from 'primeng/menubar';
   styleUrl: './sidebar.scss',
   encapsulation: ViewEncapsulation.None,
 })
-export class Sidebar {
+export class Sidebar implements OnDestroy {
+  @ViewChild(Menubar) private menubar?: Menubar;
+
+  private temporizadorCierre?: ReturnType<typeof setTimeout>;
+
+  /**
+   * Cierra el menú cuando el puntero sale de toda la navegación.
+   *
+   * El cierre se retrasa para dar tiempo a pasar del elemento padre al
+   * submenú (hay una separación visual entre ambos). Si el puntero vuelve
+   * a entrar en el submenú, `cancelarCierre()` anula este temporizador.
+   */
+  programarCierre(): void {
+    this.cancelarCierre();
+
+    this.temporizadorCierre = setTimeout(() => {
+      this.menubar?.hide();
+      this.temporizadorCierre = undefined;
+    }, AUTO_HIDE_DELAY);
+  }
+
+  /** Cancela el cierre pendiente al volver a entrar en la navegación. */
+  cancelarCierre(): void {
+    if (this.temporizadorCierre === undefined) {
+      return;
+    }
+
+    clearTimeout(this.temporizadorCierre);
+    this.temporizadorCierre = undefined;
+  }
+
+  ngOnDestroy(): void {
+    this.cancelarCierre();
+  }
+
   readonly items: MenuItem[] = [
     {
       label: 'Movimientos',

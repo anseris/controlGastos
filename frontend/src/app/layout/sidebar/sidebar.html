@@ -1,10 +1,14 @@
-<nav class="app-nav" aria-label="Navegación principal">
+<nav
+  class="app-nav"
+  aria-label="Navegación principal"
+  (mouseenter)="cancelarCierre()"
+  (mouseleave)="programarCierre()"
+>
   <p-menubar
     [model]="items"
     styleClass="app-menubar"
     breakpoint="950px"
-    [autoHide]="true"
-    [autoHideDelay]="300"
+    [autoHide]="false"
     ariaLabel="Navegación principal"
   >
     <ng-template #start>

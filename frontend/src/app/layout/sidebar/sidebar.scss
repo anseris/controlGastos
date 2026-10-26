@@ -183,6 +183,20 @@ app-sidebar {
   box-shadow: 0 16px 36px rgba(29, 41, 57, 0.14);
 }
 
+/*
+ * Puente invisible sobre el hueco de 8px entre el elemento padre y el
+ * submenú. Así el puntero nunca abandona la navegación al bajar hasta el
+ * submenú y este no se cierra por el camino.
+ */
+.app-nav .app-menubar .p-menubar-submenu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 0;
+  left: 0;
+  height: 8px;
+}
+
 .app-nav .app-menubar .p-menubar-submenu .p-menubar-item-content {
   border-radius: 9px;
 }
@@ -360,6 +374,11 @@ app-sidebar {
     background: transparent;
     box-shadow: none;
     gap: 1px;
+  }
+
+  /* En móvil el submenú va en flujo: no hace falta el puente del escritorio. */
+  .app-nav .app-menubar .p-menubar-submenu::before {
+    content: none;
   }
 
   .app-nav .app-menubar.p-menubar-mobile .p-menubar-submenu .p-menubar-item-link {
