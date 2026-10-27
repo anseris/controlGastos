@@ -114,26 +114,35 @@
   <p-card styleClass="chart-card">
     <div class="chart-header">
       <div class="chart-title">
-        <i class="pi pi-chart-bar"></i>
+        <i class="pi pi-chart-pie"></i>
         <span>Gastos por categoría</span>
       </div>
-      <span class="chart-subtitle">Todas las categorías con gasto este mes</span>
+      <span class="chart-subtitle">Peso de cada categoría sobre el gasto total</span>
     </div>
     @if (gastosPorCategoria.length > 0) {
-      <div class="bar-chart">
-        @for (cat of gastosPorCategoria; track cat.categoria) {
-          <div class="bar-row">
-            <div class="bar-info">
-              <span class="bar-label" [title]="cat.categoria">{{ cat.categoria }}</span>
-              <span class="bar-value">{{ cat.total | currency: 'EUR' }}</span>
-            </div>
-            <div class="bar-track">
-              <div class="bar-fill" [style.width.%]="barraPct((cat.pct / maxCategoriaPct) * 100)">
-                <span class="bar-pct">{{ cat.pct | number: '1.0-0' }}%</span>
-              </div>
-            </div>
+      <div class="donut-wrapper category-donut-wrapper">
+        <div
+          class="donut-chart category-donut"
+          [ngStyle]="gastosDonutStyle"
+          role="img"
+          aria-label="Distribución de los gastos por categoría"
+        >
+          <div class="donut-hole">
+            <span class="donut-total">{{ totalGastos | currency: 'EUR' }}</span>
+            <span class="donut-label">Gasto total</span>
           </div>
-        }
+        </div>
+
+        <ul class="category-legend">
+          @for (cat of gastosPorCategoria; track cat.categoria) {
+            <li class="category-legend-item">
+              <span class="category-legend-dot" [style.background]="cat.color"></span>
+              <span class="category-legend-name" [title]="cat.categoria">{{ cat.categoria }}</span>
+              <span class="category-legend-value">{{ cat.total | currency: 'EUR' }}</span>
+              <span class="category-legend-pct">{{ cat.pct | number: '1.0-0' }}%</span>
+            </li>
+          }
+        </ul>
       </div>
     } @else {
       <div class="chart-empty">

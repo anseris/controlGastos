@@ -6,6 +6,22 @@ import { DividerModule } from 'primeng/divider';
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 
+/** Colores del donut, en el mismo orden que las categorías (de mayor a menor gasto). */
+const COLORES_CATEGORIA = [
+  '#4f7cff',
+  '#c34b5a',
+  '#16855e',
+  '#b45309',
+  '#8b5cf6',
+  '#0891b2',
+  '#db2777',
+  '#65a30d',
+  '#eab308',
+  '#7c3aed',
+  '#f97316',
+  '#64748b',
+] as const;
+
 @Component({
   selector: 'app-resumen-mensual',
   imports: [
@@ -79,7 +95,12 @@ export class ResumenMensual {
    * Gastos por categoría del periodo.
    * Salen todas las categorías que tienen algún gasto este mes.
    */
-  get gastosPorCategoria(): Array<{ categoria: string; total: number; pct: number }> {
+  get gastosPorCategoria(): Array<{
+    categoria: string;
+    total: number;
+    pct: number;
+    color: string;
+  }> {
     const map = new Map<string, number>();
     for (const m of this.movimientos()) {
       const gasto = Number(m.gasto || 0);
@@ -95,16 +116,32 @@ export class ResumenMensual {
 
     const total = items.reduce((suma, item) => suma + item.total, 0);
 
-    return items.map((item) => ({
+    return items.map((item, index) => ({
       categoria: item.categoria,
       total: item.total,
       pct: total > 0 ? (item.total / total) * 100 : 0,
+      color: COLORES_CATEGORIA[index % COLORES_CATEGORIA.length] as string,
     }));
   }
 
-  get maxCategoriaPct(): number {
-    const max = Math.max(...this.gastosPorCategoria.map((c) => c.pct), 0);
-    return max || 1;
+  /** Fondo del donut de gastos por categoría. */
+  get gastosDonutStyle(): Record<string, string> {
+    const categorias = this.gastosPorCategoria;
+
+    if (categorias.length === 0) {
+      return {};
+    }
+
+    let angulo = 0;
+    const segmentos = categorias.map((categoria, index) => {
+      const inicio = angulo;
+      angulo += categoria.pct * 3.6;
+      // El último tramo termina en 360° para evitar huecos por redondeo.
+      const fin = index === categorias.length - 1 ? 360 : angulo;
+      return `${categoria.color} ${inicio}deg ${fin}deg`;
+    });
+
+    return { background: `conic-gradient(${segmentos.join(', ')})` };
   }
 
   /** Importe gastado del periodo (parte roja del donut). */
