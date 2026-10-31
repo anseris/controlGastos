@@ -1,3 +1,48 @@
+.balance-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border: 1px solid #dfe7fb;
+  border-radius: 12px;
+  background: #f7f9ff;
+}
+
+.balance-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e9efff;
+  color: #4169e1;
+}
+
+.balance-data {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.balance-data small {
+  color: #7a8497;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.balance-data strong {
+  color: #16855e;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.balance-data strong.negative {
+  color: #c34b5a;
+}
+
 .user-chip {
   display: flex;
   align-items: center;
@@ -56,6 +101,24 @@
 }
 
 @media (max-width: 620px) {
+  .balance-chip {
+    gap: 7px;
+    padding: 6px 9px;
+  }
+
+  .balance-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .balance-data small {
+    font-size: 9px;
+  }
+
+  .balance-data strong {
+    font-size: 12px;
+  }
+
   .user-data {
     display: none;
   }
