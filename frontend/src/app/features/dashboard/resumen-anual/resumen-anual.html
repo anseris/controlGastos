@@ -1,1 +1,50 @@
-<p>resumen-anual works!</p>
+<section class="annual-summary">
+  <p-card styleClass="annual-chart-card">
+    <div class="chart-header">
+      <div>
+        <h1>Resumen anual</h1>
+        <p>Gastos mensuales desglosados por categoría</p>
+      </div>
+      <label class="year-selector">
+        <span>Año</span>
+        <p-select
+          [options]="aniosDisponibles()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="anioSeleccionado()"
+          (ngModelChange)="anioSeleccionado.set($event)"
+          ariaLabel="Seleccionar año"
+        />
+      </label>
+    </div>
+
+    @if (errorMovimientos()) {
+      <div class="chart-message error-message" role="alert">{{ errorMovimientos() }}</div>
+    } @else if (errorCategorias()) {
+      <div class="chart-message warning-message" role="status">{{ errorCategorias() }}</div>
+    }
+
+    @if (cargando()) {
+      <div class="chart-message" role="status">Cargando movimientos…</div>
+    } @else if (movimientosDelAnio().length === 0) {
+      <div class="chart-message empty-message">
+        No hay movimientos registrados para {{ anioSeleccionado() }}.
+      </div>
+    } @else if (datosGrafico().datasets.length === 0) {
+      <div class="chart-message empty-message">
+        No hay gastos por categoría para {{ anioSeleccionado() }}.
+      </div>
+    } @else {
+      <div class="chart-container">
+        <p-chart
+          type="bar"
+          height="450px"
+          [data]="datosGrafico()"
+          [options]="opcionesGrafico"
+          role="img"
+          [attr.aria-label]="'Gastos por categoría y mes durante ' + anioSeleccionado()"
+        />
+      </div>
+    }
+  </p-card>
+</section>

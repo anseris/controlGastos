@@ -15,7 +15,7 @@ import {
   AmortizacionPrestamoService,
   calcularEstadoPrestamo,
 } from '../../../services/amortizacion-prestamo';
-import { Movimiento } from '../../../services/movimientos';
+import { CrearMovimiento, Movimiento, MovimientosService } from '../../../services/movimientos';
 import { finalize } from 'rxjs';
 
 /** Cuenta con los importes ya calculados para el periodo. */
@@ -109,6 +109,7 @@ export class Cuentas implements OnInit {
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   private readonly amortizacion = inject(AmortizacionPrestamoService);
+  private readonly movimientosService = inject(MovimientosService);
 
   readonly cargando = computed(() => this.store.cargando() || this.bancos.cargando());
   readonly error = this.store.error;
@@ -132,9 +133,9 @@ export class Cuentas implements OnInit {
   private readonly sumas = computed<Record<string, number>>(() => {
     const sumas: Record<string, number> = {};
     for (const movimiento of this.movimientosTodos()) {
-      if (this.esAhorro(movimiento) && movimiento.tipoAhorro) {
+      if (movimiento.tipoAhorro) {
         sumas[movimiento.tipoAhorro] =
-          (sumas[movimiento.tipoAhorro] ?? 0) + (movimiento.gasto || 0);
+          (sumas[movimiento.tipoAhorro] ?? 0) + this.variacionAhorro(movimiento);
       }
     }
     return sumas;
@@ -144,13 +145,18 @@ export class Cuentas implements OnInit {
   private readonly sumasMes = computed<Record<string, number>>(() => {
     const sumas: Record<string, number> = {};
     for (const movimiento of this.movimientosMes()) {
-      if (this.esAhorro(movimiento) && movimiento.tipoAhorro) {
+      if (movimiento.tipoAhorro) {
         sumas[movimiento.tipoAhorro] =
-          (sumas[movimiento.tipoAhorro] ?? 0) + (movimiento.gasto || 0);
+          (sumas[movimiento.tipoAhorro] ?? 0) + this.variacionAhorro(movimiento);
       }
     }
     return sumas;
   });
+
+  /** Saldo de ING Ahorro disponible para traspasar a la cuenta principal. */
+  readonly saldoIng = computed(
+    () => this.cuentasCalculadas().find((item) => item.cuenta.id === 'ing')?.saldoActual ?? 0,
+  );
 
   /** Cálculo reactivo de saldos, variación del mes y datos de préstamos. */
   readonly cuentasCalculadas = computed<CuentaCalculada[]>(() => {
@@ -225,11 +231,102 @@ export class Cuentas implements OnInit {
       return [];
     }
     return this.movimientosMes().filter(
-      (movimiento) => this.esAhorro(movimiento) && movimiento.tipoAhorro === id,
+      (movimiento) =>
+        movimiento.tipoAhorro === id &&
+        ((this.esAhorro(movimiento) && movimiento.gasto > 0) ||
+          (movimiento.tipo.toLowerCase() === 'ingreso' && movimiento.ingreso > 0)),
     );
   });
 
   readonly detalleTitulo = computed(() => this.cuentaSeleccionada()?.nombre ?? '');
+
+  // --- Traspaso de ING Ahorro a la cuenta principal ---
+
+  readonly showTransferDialog = signal(false);
+  readonly guardandoTraspaso = signal(false);
+  importeTraspaso: number | null = null;
+  submittedTraspaso = false;
+
+  abrirTraspaso(): void {
+    this.importeTraspaso = null;
+    this.submittedTraspaso = false;
+    this.showTransferDialog.set(true);
+  }
+
+  guardarTraspaso(): void {
+    this.submittedTraspaso = true;
+    const importe = Number(this.importeTraspaso);
+
+    if (
+      this.guardandoTraspaso() ||
+      !Number.isFinite(importe) ||
+      importe <= 0 ||
+      importe > this.saldoIng()
+    ) {
+      return;
+    }
+
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(
+      hoy.getDate(),
+    ).padStart(2, '0')}`;
+    const movimiento: CrearMovimiento = {
+      fecha,
+      descripcion: 'traspaso de ahorro ING a cuenta principal',
+      categoria: 'Otros Ingresos',
+      tipoAhorro: 'ing',
+      ingreso: importe,
+      gasto: 0,
+      tipo: 'ingreso',
+      esFijo: false,
+    };
+
+    this.guardandoTraspaso.set(true);
+    this.movimientosService
+      .crearMovimiento(movimiento)
+      .pipe(finalize(() => this.guardandoTraspaso.set(false)))
+      .subscribe({
+        next: () => {
+          this.messages.add({
+            severity: 'success',
+            summary: 'Traspaso realizado',
+            detail: 'El ingreso se ha registrado y el saldo de ING Ahorro se ha actualizado.',
+          });
+          this.cerrarTraspaso();
+          this.store.cargar(true).subscribe({
+            error: (error: unknown) =>
+              console.error('Error al actualizar los movimientos tras el traspaso:', error),
+          });
+        },
+        error: (error: unknown) => {
+          console.error('Error al traspasar dinero desde ING Ahorro:', error);
+          this.messages.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: this.mensajeError(error, 'No se pudo completar el traspaso.'),
+          });
+        },
+      });
+  }
+
+  cerrarTraspaso(): void {
+    this.showTransferDialog.set(false);
+    this.importeTraspaso = null;
+    this.submittedTraspaso = false;
+  }
+
+  onTransferDialogVisibility(visible: boolean): void {
+    if (visible) {
+      this.showTransferDialog.set(true);
+    } else {
+      this.cerrarTraspaso();
+    }
+  }
+
+  importeTraspasoInvalido(): boolean {
+    const importe = Number(this.importeTraspaso);
+    return !Number.isFinite(importe) || importe <= 0 || importe > this.saldoIng();
+  }
 
   // --- Alta / edición de cuentas ---
 
@@ -253,6 +350,13 @@ export class Cuentas implements OnInit {
   /** La categoría de ahorro se guarda como 'Ahorro' (se compara sin distinguir mayúsculas). */
   private esAhorro(movimiento: Movimiento): boolean {
     return (movimiento.categoria || '').trim().toLowerCase() === 'ahorro';
+  }
+
+  private variacionAhorro(movimiento: Movimiento): number {
+    if (movimiento.tipo.toLowerCase() === 'ingreso' && movimiento.tipoAhorro) {
+      return -Number(movimiento.ingreso || 0);
+    }
+    return this.esAhorro(movimiento) ? Number(movimiento.gasto || 0) : 0;
   }
 
   seleccionar(id: string): void {
@@ -385,8 +489,15 @@ export class Cuentas implements OnInit {
   }
 
   private mensajeError(error: unknown, porDefecto: string): string {
-    const mensaje = (error as { error?: { mensaje?: string } })?.error?.mensaje;
+    const mensaje =
+      typeof error === 'object' && error !== null && 'error' in error
+        ? (error.error as { mensaje?: string } | undefined)?.mensaje
+        : undefined;
     return mensaje || porDefecto;
+  }
+
+  importeDetalle(movimiento: Movimiento): number {
+    return Number(movimiento.ingreso || movimiento.gasto || 0);
   }
 
   private emptyCuenta(): FormCuenta {

@@ -1,0 +1,76 @@
+.annual-summary {
+  margin-top: 20px;
+}
+
+:host ::ng-deep .annual-chart-card .p-card {
+  border: 1px solid #e9edf4;
+  border-radius: 14px;
+  box-shadow: 0 3px 14px #1d293908;
+}
+
+:host ::ng-deep .annual-chart-card .p-card-body {
+  padding: 22px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.chart-header h1 {
+  margin: 0;
+  color: #26334b;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.chart-header p {
+  margin: 5px 0 0;
+  color: #7a8497;
+  font-size: 13px;
+}
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #53617a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chart-container {
+  position: relative;
+  height: 450px;
+}
+
+.chart-message {
+  padding: 20px 12px;
+  color: #7a8497;
+  text-align: center;
+}
+
+.error-message {
+  color: #c34b5a;
+}
+
+.warning-message {
+  padding: 0 0 12px;
+  color: #b45309;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  :host ::ng-deep .annual-chart-card .p-card-body {
+    padding: 16px;
+  }
+
+  .chart-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+}

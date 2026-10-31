@@ -205,6 +205,40 @@
   color: #c2410c;
 }
 
+.income-text {
+  color: #16855e;
+}
+
+.transfer-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f5f7fc;
+  color: #788398;
+  font-size: 12px;
+}
+
+.transfer-balance strong {
+  color: #26334b;
+  font-size: 15px;
+}
+
+.transfer-description {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #53617a;
+  font-size: 12px;
+}
+
+.transfer-description small {
+  color: #97a1b3;
+  font-size: 11px;
+}
+
 .negative {
   color: #dc2626;
 }
