@@ -10,6 +10,16 @@
 }
 
 @media (max-width: 950px) {
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  app-sidebar {
+    order: -1;
+    width: 100%;
+  }
+
   .app-body {
     flex-direction: column;
     gap: 14px;

@@ -4,6 +4,7 @@
   gap: 10px;
   flex: 0 0 auto;
   padding: 8px 13px;
+  margin-left: auto;
   border: 1px solid #dfe7fb;
   border-radius: 12px;
   background: #f7f9ff;
@@ -55,6 +56,10 @@
   box-shadow: 0 2px 8px rgba(29, 41, 57, 0.04);
 }
 
+:host .top-actions {
+  display: contents;
+}
+
 .user-avatar {
   display: grid;
   place-items: center;
@@ -95,6 +100,20 @@
 }
 
 @media (max-width: 950px) {
+  :host .top-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    width: 100%;
+    order: 1;
+    gap: 10px;
+  }
+
+  .balance-chip {
+    margin-left: 0;
+  }
+
   .user-chip {
     margin-left: 0;
   }

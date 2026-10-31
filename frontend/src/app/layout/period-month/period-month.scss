@@ -1,0 +1,50 @@
+@media (max-width: 950px) {
+  .top-actions .import-action,
+  :host ::ng-deep .top-actions .export-action {
+    display: none !important;
+  }
+
+  :host ::ng-deep .top-actions .new-movement-action {
+    width: 42px;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  :host ::ng-deep .top-actions .new-movement-action .p-button-label {
+    display: none;
+  }
+
+  :host ::ng-deep .top-actions .new-movement-action .p-button-icon {
+    margin: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .filter-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+  }
+
+  .filter-row > div:first-child {
+    min-width: 0;
+  }
+
+  :host ::ng-deep .month-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .period-note,
+  .filter-spacer {
+    display: none;
+  }
+
+  .filter-row .top-actions {
+    align-self: end;
+    width: auto;
+    margin: 0;
+  }
+}

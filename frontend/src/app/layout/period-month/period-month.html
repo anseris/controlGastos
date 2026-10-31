@@ -22,7 +22,7 @@
   <div class="filter-spacer"></div>
 
   <div class="top-actions">
-    <label class="import-button p-button p-component p-button-outlined" for="excelFile"
+    <label class="import-button import-action p-button p-component p-button-outlined" for="excelFile"
       ><i class="pi pi-file-import"></i><span>Importar Excel</span></label
     >
     <input id="excelFile" class="visually-hidden" type="file" accept=".xlsx,.xls,.xlsm" />
@@ -31,8 +31,15 @@
       icon="pi pi-download"
       severity="secondary"
       [outlined]="true"
+      styleClass="export-action"
     ></p-button>
-    <p-button label="Nuevo movimiento" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    <p-button
+      label="Nuevo movimiento"
+      icon="pi pi-plus"
+      ariaLabel="Nuevo movimiento"
+      styleClass="new-movement-action"
+      (onClick)="openNew()"
+    ></p-button>
   </div>
   <!-- <p-button label="Restaurar Excel de ejemplo" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="restoreExamples()"></p-button> -->
 </section>

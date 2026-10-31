@@ -5,16 +5,16 @@
     <h1>Control de gastos</h1>
     <p>Ingresos, gastos y presupuesto en un solo lugar.</p>
   </div>
-  <div class="balance-chip" aria-live="polite">
-    <span class="balance-icon"><i class="pi pi-wallet" aria-hidden="true"></i></span>
-    <span class="balance-data">
-      <small>Balance total acumulado</small>
-      <strong [class.negative]="balanceHistorico() < 0">
-        {{ balanceHistorico() | currency: 'EUR' }}
-      </strong>
-    </span>
-  </div>
   <div class="top-actions">
+    <div class="balance-chip" aria-live="polite">
+      <span class="balance-icon"><i class="pi pi-wallet" aria-hidden="true"></i></span>
+      <span class="balance-data">
+        <small>Balance total acumulado</small>
+        <strong [class.negative]="balanceHistorico() < 0">
+          {{ balanceHistorico() | currency: 'EUR' }}
+        </strong>
+      </span>
+    </div>
     <div class="user-chip">
       <span class="user-avatar">{{ inicial() }}</span>
       <div class="user-data">
